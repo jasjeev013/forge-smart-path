@@ -1,73 +1,146 @@
-# Welcome to your Lovable project
+# SkillForge - AI-Powered Learning Platform
 
-## Project info
+An intelligent e-learning platform that leverages AI to personalize student learning paths and dynamically generate assessments tailored to each user's skill level.
 
-**URL**: https://lovable.dev/projects/783f52f2-f800-4ae6-aa4e-da5b111fe471
+## 🚀 Features
 
-## How can I edit this code?
+### Role-Based Access
+- **Student Dashboard**: Personalized learning paths, adaptive content recommendations, progress tracking
+- **Instructor Panel**: Course creation, content upload (videos, PDFs, links), student analytics
+- **Admin Console**: Platform oversight, user management, system analytics
 
-There are several ways of editing your application.
+### AI-Powered Learning
+- Adaptive learning engine that adjusts content difficulty based on performance
+- Dynamic exam generation tailored to skill levels
+- Personalized course recommendations
+- Real-time progress tracking with visual analytics
 
-**Use Lovable**
+### Immersive Experience
+- 3D animated landing page with interactive elements
+- Glassmorphic UI with smooth animations
+- Gradient accents and responsive design
+- Modern, intuitive interface
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/783f52f2-f800-4ae6-aa4e-da5b111fe471) and start prompting.
+## 🔐 Demo Credentials
 
-Changes made via Lovable will be committed automatically to this repo.
+Access the platform using these demo accounts:
 
-**Use your preferred IDE**
+**Student Account:**
+- Email: `student@skillforge.com`
+- Password: `student123`
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**Instructor Account:**
+- Email: `instructor@skillforge.com`
+- Password: `instructor123`
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Admin Account:**
+- Email: `admin@skillforge.com`
+- Password: `admin123`
 
-Follow these steps:
+## 🛠️ Technology Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+- **Frontend**: React 18 + TypeScript
+- **3D Graphics**: Three.js + React Three Fiber
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Routing**: React Router v6
+- **Build Tool**: Vite
+- **State Management**: TanStack Query
+
+## 📦 Getting Started
+
+```bash
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Navigate to project directory
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🎨 Design System
 
-**Use GitHub Codespaces**
+SkillForge uses a comprehensive design system with:
+- **Primary Color**: Deep purple (#8b5cf6) - Learning & AI
+- **Accent Color**: Cyan (#00d9ff) - Innovation & Technology
+- **Gradients**: Animated hero gradients, glassmorphic cards
+- **Animations**: Smooth transitions, floating elements, glow effects
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+All colors are defined using HSL in the design system for easy theming.
 
-## What technologies are used for this project?
+## 📱 Pages & Routes
 
-This project is built with:
+- `/` - Landing page with 3D hero
+- `/login` - Authentication page
+- `/register` - User registration
+- `/student/dashboard` - Student learning interface
+- `/instructor/dashboard` - Course management panel
+- `/admin/dashboard` - Platform administration
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🔧 Development
 
-## How can I deploy this project?
+### Project Structure
+```
+src/
+├── components/         # Reusable UI components
+│   ├── ui/            # shadcn/ui components
+│   ├── Hero3D.tsx     # 3D animated hero
+│   ├── Navbar.tsx     # Navigation component
+│   └── DashboardLayout.tsx  # Dashboard wrapper
+├── pages/             # Route pages
+│   ├── Landing.tsx
+│   ├── Login.tsx
+│   ├── Register.tsx
+│   ├── StudentDashboard.tsx
+│   ├── InstructorDashboard.tsx
+│   └── AdminDashboard.tsx
+├── lib/               # Utilities
+└── index.css          # Design system & globals
+```
 
-Simply open [Lovable](https://lovable.dev/projects/783f52f2-f800-4ae6-aa4e-da5b111fe471) and click on Share -> Publish.
+## 🚀 Deployment
 
-## Can I connect a custom domain to my Lovable project?
+Deploy your SkillForge instance:
 
-Yes, you can!
+1. Open [Lovable](https://lovable.dev/projects/783f52f2-f800-4ae6-aa4e-da5b111fe471)
+2. Click Share → Publish
+3. Your platform will be live!
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🌐 Custom Domain
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+To connect a custom domain:
+1. Navigate to Project > Settings > Domains
+2. Click "Connect Domain"
+3. Follow the setup instructions
+
+Learn more: [Custom Domain Setup](https://docs.lovable.dev/features/custom-domain)
+
+## 📖 Documentation
+
+- [Lovable Documentation](https://docs.lovable.dev/)
+- [Three.js Documentation](https://threejs.org/docs/)
+- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber)
+- [shadcn/ui Components](https://ui.shadcn.com/)
+
+## 🤝 Contributing
+
+This is a demo project showcasing an AI-powered learning platform. Feel free to extend it with:
+- Real backend integration (Lovable Cloud/Supabase)
+- Actual AI model integration
+- Payment processing
+- Video streaming
+- Real-time collaboration features
+
+## 📄 License
+
+This project was created with Lovable and is available for educational and demonstration purposes.
+
+---
+
+**Built with 💜 using Lovable** - Where AI meets education to forge new skills.
