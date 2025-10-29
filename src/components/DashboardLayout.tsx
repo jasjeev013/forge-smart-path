@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, LogOut, Menu } from 'lucide-react';
 import { toast } from 'sonner';
+import { ThemeToggle } from './ThemeToggle';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -40,8 +41,8 @@ export default function DashboardLayout({ children, role, navigationItems }: Das
   return (
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass border-b">
-        <div className="flex items-center justify-between px-6 py-4">
+      <header className="fixed top-4 left-4 right-4 z-50 glass border rounded-2xl mx-auto max-w-[calc(100%-2rem)]">
+        <div className="flex items-center justify-between px-4 md:px-6 py-4">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -57,25 +58,26 @@ export default function DashboardLayout({ children, role, navigationItems }: Das
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            <ThemeToggle />
             <div className="text-right hidden sm:block">
               <div className="text-sm font-medium">{user.name || user.email}</div>
               <div className="text-xs text-muted-foreground">{getRoleName()}</div>
             </div>
             <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              <LogOut className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Logout</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="flex pt-[73px]">
+      <div className="flex pt-20 md:pt-24">
         {/* Sidebar */}
         <aside
-          className={`fixed left-0 top-[73px] bottom-0 glass border-r transition-all duration-300 ${
+          className={`fixed left-0 md:left-4 top-20 md:top-24 bottom-0 md:bottom-4 glass border md:border-r md:rounded-2xl transition-all duration-300 ${
             isSidebarOpen ? 'w-64' : 'w-0'
-          } overflow-hidden`}
+          } overflow-hidden z-40`}
         >
           <nav className="p-4 space-y-2">
             {navigationItems.map((item) => {
@@ -98,10 +100,10 @@ export default function DashboardLayout({ children, role, navigationItems }: Das
         {/* Main Content */}
         <main
           className={`flex-1 transition-all duration-300 ${
-            isSidebarOpen ? 'ml-64' : 'ml-0'
+            isSidebarOpen ? 'md:ml-64' : 'ml-0'
           }`}
         >
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             {children}
           </div>
         </main>

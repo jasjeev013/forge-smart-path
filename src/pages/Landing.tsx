@@ -11,7 +11,7 @@ export default function Landing() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
+      <section className="pt-28 md:pt-32 pb-12 md:pb-20 px-4">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 animate-fade-in">
@@ -20,46 +20,46 @@ export default function Landing() {
                 <span className="text-sm">AI-Powered Learning Platform</span>
               </div>
               
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-tight">
                 Master Skills with{' '}
                 <span className="gradient-text">Intelligent</span> Learning
               </h1>
               
-              <p className="text-xl text-muted-foreground">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
                 SkillForge uses advanced AI to create personalized learning paths, adaptive assessments, 
                 and dynamic content that evolves with your progress. Experience education reimagined.
               </p>
               
-              <div className="flex gap-4">
-                <Link to="/register">
-                  <Button size="lg" className="bg-primary hover:bg-primary/90 glow-hover">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/register" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full bg-primary hover:bg-primary/90 glow-hover">
                     Start Learning Free
                   </Button>
                 </Link>
-                <Link to="/login">
-                  <Button size="lg" variant="outline">
+                <Link to="/login" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full">
                     View Demo
                   </Button>
                 </Link>
               </div>
               
-              <div className="flex gap-8 text-sm">
+              <div className="grid grid-cols-3 gap-4 md:gap-8 text-sm">
                 <div>
-                  <div className="text-3xl font-bold gradient-text">50K+</div>
-                  <div className="text-muted-foreground">Active Learners</div>
+                  <div className="text-2xl md:text-3xl font-bold gradient-text">50K+</div>
+                  <div className="text-xs md:text-sm text-muted-foreground">Active Learners</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold gradient-text">1,200+</div>
-                  <div className="text-muted-foreground">Courses</div>
+                  <div className="text-2xl md:text-3xl font-bold gradient-text">1,200+</div>
+                  <div className="text-xs md:text-sm text-muted-foreground">Courses</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold gradient-text">95%</div>
-                  <div className="text-muted-foreground">Success Rate</div>
+                  <div className="text-2xl md:text-3xl font-bold gradient-text">95%</div>
+                  <div className="text-xs md:text-sm text-muted-foreground">Success Rate</div>
                 </div>
               </div>
             </div>
             
-            <div className="relative float">
+            <div className="relative float hidden lg:block">
               <Hero3D />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none" />
             </div>
@@ -68,13 +68,13 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4">
+      <section className="py-12 md:py-20 px-4">
         <div className="container mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-bold">
+          <div className="text-center mb-12 md:mb-16 space-y-4">
+            <h2 className="text-3xl md:text-4xl font-bold">
               Learn Smarter with <span className="gradient-text">AI Technology</span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Our platform adapts to your unique learning style and pace, delivering content 
               that challenges and inspires you.
             </p>
@@ -127,22 +127,98 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-12 md:py-20 px-4 bg-muted/30">
+        <div className="container mx-auto">
+          <div className="text-center mb-12 md:mb-16 space-y-4">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              What Our <span className="gradient-text">Learners Say</span>
+            </h2>
+            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Hear from students and professionals who transformed their careers with SkillForge
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: 'Sarah Chen',
+                role: 'Software Developer',
+                content: 'The adaptive learning approach helped me master React in half the time. The AI-generated exercises were exactly what I needed at each stage.',
+                rating: 5,
+              },
+              {
+                name: 'Michael Torres',
+                role: 'Data Scientist',
+                content: 'SkillForge\'s personalized learning paths made complex topics accessible. The progress tracking kept me motivated throughout my journey.',
+                rating: 5,
+              },
+              {
+                name: 'Emma Williams',
+                role: 'UI/UX Designer',
+                content: 'I love how the platform adapts to my learning style. The instant feedback and expert instructors made learning design principles so much easier.',
+                rating: 5,
+              },
+            ].map((testimonial, index) => (
+              <Card key={index} className="glass border-border/50 hover:border-primary/50 transition-all">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex gap-1">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Sparkles key={i} className="w-4 h-4 text-accent fill-accent" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground italic">{testimonial.content}</p>
+                  <div className="pt-4 border-t border-border">
+                    <div className="font-semibold">{testimonial.name}</div>
+                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-12 md:py-20 px-4">
+        <div className="container mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { value: '98%', label: 'Course Completion Rate', icon: TrendingUp },
+              { value: '150+', label: 'Expert Instructors', icon: Users },
+              { value: '24/7', label: 'Learning Support', icon: Zap },
+              { value: '2M+', label: 'Lessons Completed', icon: BookOpen },
+            ].map((stat, index) => (
+              <Card key={index} className="glass border-border/50 text-center">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <stat.icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="text-3xl md:text-4xl font-bold gradient-text">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="py-20 px-4">
+      <section className="py-12 md:py-20 px-4">
         <div className="container mx-auto">
           <Card className="glass border-primary/20 overflow-hidden">
             <div className="absolute inset-0 animated-gradient opacity-10" />
-            <CardContent className="relative p-12 text-center space-y-6">
-              <h2 className="text-4xl font-bold">
+            <CardContent className="relative p-8 md:p-12 text-center space-y-6">
+              <h2 className="text-3xl md:text-4xl font-bold">
                 Ready to Transform Your Learning?
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto">
                 Join thousands of students already learning smarter with SkillForge. 
                 Start your personalized learning journey today.
               </p>
-              <div className="flex gap-4 justify-center">
-                <Link to="/register">
-                  <Button size="lg" className="bg-primary hover:bg-primary/90 glow-hover">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/register" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full bg-primary hover:bg-primary/90 glow-hover">
                     Create Free Account
                   </Button>
                 </Link>
@@ -153,8 +229,8 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-12 px-4">
-        <div className="container mx-auto text-center text-muted-foreground">
+      <footer className="border-t py-8 md:py-12 px-4">
+        <div className="container mx-auto text-center text-muted-foreground text-sm md:text-base">
           <p>&copy; 2025 SkillForge. Empowering learners worldwide with AI-driven education.</p>
         </div>
       </footer>
