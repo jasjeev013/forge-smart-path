@@ -7,18 +7,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { register } from '@/services/auth';
+import { getUserDetails } from '@/services/users';
+import { RegisterRequest, UserDto, UserRole } from '@/services/types';
 
 export default function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
     role: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
@@ -33,17 +37,47 @@ export default function Register() {
 
     // Store user data
     const userData = {
-      name: formData.name,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
       email: formData.email,
+      password: formData.password,
       role: formData.role,
     };
+
+    const ragisterRequest: RegisterRequest = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      password: userData.password,
+      role: UserRole.STUDENT, // default value
+    };
     
-    localStorage.setItem('user', JSON.stringify(userData));
-    toast.success('Account created successfully!');
+    if(userData.role=='student'){
+      ragisterRequest.role=UserRole.STUDENT;
+    }else if(userData.role=='instructor'){
+      ragisterRequest.role=UserRole.INSTRUCTOR;
+    }else if(userData.role=='admin'){
+      ragisterRequest.role=UserRole.ADMIN;
+    }
+    const regis = await register(ragisterRequest);
+    if(regis.result){
+      localStorage.setItem('token', regis.object.token);
+      localStorage.setItem('user', JSON.stringify(regis.object));
+      // localStorage.setItem('expiresAt', user.object.expirationDate.toString());
+      toast.success('Welcome! Registered successfully.');
+
+      setTimeout(() => {
+        navigate(`/${regis.object.role}/dashboard`);
+      }, 500);
+    }else {
+          toast.error('Invalid credentials. Please try again.');
+        }
+    // localStorage.setItem('user', JSON.stringify(userData));
+    /*toast.success('Account created successfully!');
     
     setTimeout(() => {
       navigate(`/${formData.role}/dashboard`);
-    }, 500);
+    }, 500);*/
   };
 
   return (
@@ -62,12 +96,23 @@ export default function Register() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">First Name</Label>
               <Input
                 id="name"
-                placeholder="John Doe"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="John"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                required
+                className="bg-secondary"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Last Name</Label>
+              <Input
+                id="name"
+                placeholder="Doe"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 required
                 className="bg-secondary"
               />

@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { loginIn } from '@/services/auth';
+import { getUserDetails } from '@/services/users';
+import { UserDto } from '@/services/types';
 
 // Dummy credentials
 const DUMMY_USERS = {
@@ -21,21 +24,25 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check credentials
-    const user = Object.values(DUMMY_USERS).find(
-      u => u.email === email && u.password === password
-    );
 
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-      toast.success(`Welcome back! Logging in as ${user.role}`);
-      
+    // Check credentials
+    /*const user = Object.values(DUMMY_USERS).find(
+      u => u.email === email && u.password === password
+    );*/
+
+    const response = await loginIn({ email, password });
+
+    if (response.result) {
+
+      localStorage.setItem('token', response.object.token);
+
+      toast.success('Welcome back! Login successful.');
+      console.log(response.object.role.toLowerCase());
       // Redirect based on role
       setTimeout(() => {
-        navigate(`/${user.role}/dashboard`);
+        navigate(`/${response.object.role.toLowerCase()}/dashboard`);
       }, 500);
     } else {
       toast.error('Invalid credentials. Please try again.');
@@ -52,7 +59,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 animated-gradient opacity-20" />
-      
+
       <Card className="w-full max-w-md glass border-border/50 relative z-10">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-4">
@@ -61,7 +68,7 @@ export default function Login() {
           <CardTitle className="text-3xl gradient-text">Welcome Back</CardTitle>
           <CardDescription>Sign in to continue your learning journey</CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
@@ -76,7 +83,7 @@ export default function Login() {
                 className="bg-secondary"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input

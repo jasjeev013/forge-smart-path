@@ -18,16 +18,15 @@ export default function DashboardLayout({ children, role, navigationItems }: Das
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    } else {
+    const userData = localStorage.getItem('token');
+    if (!userData) {
       navigate('/login');
     }
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+ 
+    localStorage.removeItem('token');
     toast.success('Logged out successfully');
     navigate('/');
   };

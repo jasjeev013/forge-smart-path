@@ -6,11 +6,11 @@ import App from "./App.tsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <App />
       </ThemeProvider>
     </BrowserRouter>
-  </StrictMode>
+  // </StrictMode>
 );
