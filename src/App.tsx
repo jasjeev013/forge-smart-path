@@ -6,6 +6,8 @@ import { Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Courses from "./pages/Courses";
+import CreateCourse from "./pages/CreateCourse";
 import StudentDashboard from "./pages/StudentDashboard";
 import InstructorDashboard from "./pages/InstructorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -22,6 +24,8 @@ const App = () => (
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/instructor/create-course" element={<CreateCourse />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

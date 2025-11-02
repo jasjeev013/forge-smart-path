@@ -1,9 +1,8 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, LogOut, Menu } from 'lucide-react';
-import { toast } from 'sonner';
-import { ThemeToggle } from './ThemeToggle';
+import { Menu } from 'lucide-react';
+import Navbar from './Navbar';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,65 +10,32 @@ interface DashboardLayoutProps {
   navigationItems: { label: string; path: string; icon: ReactNode }[];
 }
 
-export default function DashboardLayout({ children, role, navigationItems }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, navigationItems }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState<any>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const userData = localStorage.getItem('token');
-    if (!userData) {
+    const token = localStorage.getItem('token');
+    if (!token) {
       navigate('/login');
     }
   }, [navigate]);
 
-  const handleLogout = () => {
- 
-    localStorage.removeItem('token');
-    toast.success('Logged out successfully');
-    navigate('/');
-  };
-
-  const getRoleName = () => {
-    return role.charAt(0).toUpperCase() + role.slice(1);
-  };
-
-  if (!user) return null;
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Bar */}
-      <header className="fixed top-4 left-4 right-4 z-50 glass border rounded-2xl mx-auto max-w-[calc(100%-2rem)]">
-        <div className="flex items-center justify-between px-4 md:px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-            
-            <Link to="/" className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary" />
-              <span className="text-xl font-bold gradient-text">SkillForge</span>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-4">
-            <ThemeToggle />
-            <div className="text-right hidden sm:block">
-              <div className="text-sm font-medium">{user.name || user.email}</div>
-              <div className="text-xs text-muted-foreground">{getRoleName()}</div>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Logout</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
+      
+      <div className="fixed top-24 left-4 z-40">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="glass"
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+      </div>
 
       <div className="flex pt-20 md:pt-24">
         {/* Sidebar */}

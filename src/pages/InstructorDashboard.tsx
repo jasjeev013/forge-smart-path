@@ -2,6 +2,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 import { 
   BookOpen, 
   Upload, 
@@ -66,10 +67,12 @@ export default function InstructorDashboard() {
             </h1>
             <p className="text-muted-foreground">Manage your courses and engage with students</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90 glow-hover">
-            <Plus className="w-4 h-4 mr-2" />
-            Create New Course
-          </Button>
+          <Link to="/instructor/create-course">
+            <Button className="bg-primary hover:bg-primary/90 glow-hover">
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Course
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Grid */}

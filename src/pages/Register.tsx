@@ -22,6 +22,8 @@ export default function Register() {
     role: '',
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -35,49 +37,40 @@ export default function Register() {
       return;
     }
 
-    // Store user data
-    const userData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      password: formData.password,
-      role: formData.role,
-    };
+    setIsLoading(true);
 
-    const ragisterRequest: RegisterRequest = {
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
-      password: userData.password,
-      role: UserRole.STUDENT, // default value
-    };
-    
-    if(userData.role=='student'){
-      ragisterRequest.role=UserRole.STUDENT;
-    }else if(userData.role=='instructor'){
-      ragisterRequest.role=UserRole.INSTRUCTOR;
-    }else if(userData.role=='admin'){
-      ragisterRequest.role=UserRole.ADMIN;
+    try {
+      const roleMapping = {
+        'student': UserRole.STUDENT,
+        'instructor': UserRole.INSTRUCTOR,
+        'admin': UserRole.ADMIN
+      };
+
+      const registerRequest: RegisterRequest = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        role: roleMapping[formData.role as keyof typeof roleMapping]
+      };
+
+      const response = await register(registerRequest);
+      
+      if (response.result) {
+        localStorage.setItem('token', response.object.token);
+        toast.success('Welcome! Account created successfully.');
+
+        setTimeout(() => {
+          navigate(`/${response.object.role.toLowerCase()}/dashboard`);
+        }, 500);
+      } else {
+        toast.error(response.message || 'Registration failed. Please try again.');
+      }
+    } catch (error) {
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-    const regis = await register(ragisterRequest);
-    if(regis.result){
-      localStorage.setItem('token', regis.object.token);
-      localStorage.setItem('user', JSON.stringify(regis.object));
-      // localStorage.setItem('expiresAt', user.object.expirationDate.toString());
-      toast.success('Welcome! Registered successfully.');
-
-      setTimeout(() => {
-        navigate(`/${regis.object.role}/dashboard`);
-      }, 500);
-    }else {
-          toast.error('Invalid credentials. Please try again.');
-        }
-    // localStorage.setItem('user', JSON.stringify(userData));
-    /*toast.success('Account created successfully!');
-    
-    setTimeout(() => {
-      navigate(`/${formData.role}/dashboard`);
-    }, 500);*/
   };
 
   return (
@@ -171,8 +164,12 @@ export default function Register() {
               />
             </div>
 
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 glow-hover">
-              Create Account
+            <Button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-primary/90 glow-hover"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
           </form>
 
