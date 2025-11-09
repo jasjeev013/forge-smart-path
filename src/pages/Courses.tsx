@@ -3,84 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, BookOpen, Clock, Users, Star } from 'lucide-react';
+import { Search, BookOpen, Clock, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-
-// Dummy course data
-const dummyCourses = [
-  {
-    id: 1,
-    title: 'Complete Web Development Bootcamp',
-    instructor: 'Sarah Johnson',
-    description: 'Learn HTML, CSS, JavaScript, React, Node.js and more in this comprehensive web development course.',
-    thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop',
-    duration: '40 hours',
-    students: 15234,
-    rating: 4.8,
-    level: 'Beginner',
-    price: '$99.99',
-  },
-  {
-    id: 2,
-    title: 'Advanced Python Programming',
-    instructor: 'Michael Chen',
-    description: 'Master advanced Python concepts including OOP, decorators, generators, and async programming.',
-    thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=250&fit=crop',
-    duration: '25 hours',
-    students: 8921,
-    rating: 4.9,
-    level: 'Advanced',
-    price: '$89.99',
-  },
-  {
-    id: 3,
-    title: 'Data Science with Python',
-    instructor: 'Emily Rodriguez',
-    description: 'Learn data analysis, visualization, and machine learning using Python, Pandas, and Scikit-learn.',
-    thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop',
-    duration: '35 hours',
-    students: 12456,
-    rating: 4.7,
-    level: 'Intermediate',
-    price: '$109.99',
-  },
-  {
-    id: 4,
-    title: 'UI/UX Design Fundamentals',
-    instructor: 'David Kim',
-    description: 'Master the principles of user interface and user experience design with hands-on projects.',
-    thumbnail: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=250&fit=crop',
-    duration: '20 hours',
-    students: 9834,
-    rating: 4.6,
-    level: 'Beginner',
-    price: '$79.99',
-  },
-  {
-    id: 5,
-    title: 'Machine Learning A-Z',
-    instructor: 'Dr. James Wilson',
-    description: 'Comprehensive course on machine learning algorithms, deep learning, and neural networks.',
-    thumbnail: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=250&fit=crop',
-    duration: '45 hours',
-    students: 18765,
-    rating: 4.9,
-    level: 'Advanced',
-    price: '$129.99',
-  },
-  {
-    id: 6,
-    title: 'Mobile App Development with React Native',
-    instructor: 'Lisa Anderson',
-    description: 'Build cross-platform mobile applications for iOS and Android using React Native.',
-    thumbnail: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=250&fit=crop',
-    duration: '30 hours',
-    students: 7654,
-    rating: 4.7,
-    level: 'Intermediate',
-    price: '$94.99',
-  },
-];
+import { dummyCourses } from '@/data/dummyCourses';
+import { SkillLevel } from '@/services/types';
+import { toast } from 'sonner';
 
 export default function Courses() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,17 +16,22 @@ export default function Courses() {
   const filteredCourses = dummyCourses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLevel = selectedLevel === 'all' || course.level.toLowerCase() === selectedLevel.toLowerCase();
+    const matchesLevel = selectedLevel === 'all' || course.difficultyLevel === selectedLevel;
     return matchesSearch && matchesLevel;
   });
 
-  const getLevelColor = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'beginner': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'intermediate': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'advanced': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+  const getLevelColor = (level: SkillLevel) => {
+    switch (level) {
+      case SkillLevel.BEGINNER: return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case SkillLevel.INTERMEDIATE: return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case SkillLevel.ADVANCED: return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
+  };
+
+  const handleEnroll = (courseId: string) => {
+    toast.success('Enrollment feature coming soon!');
+    console.log('Enrolling in course:', courseId);
   };
 
   return (
@@ -129,7 +61,7 @@ export default function Courses() {
                     className="pl-10 bg-secondary"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant={selectedLevel === 'all' ? 'default' : 'outline'}
                     onClick={() => setSelectedLevel('all')}
@@ -138,22 +70,22 @@ export default function Courses() {
                     All Levels
                   </Button>
                   <Button
-                    variant={selectedLevel === 'beginner' ? 'default' : 'outline'}
-                    onClick={() => setSelectedLevel('beginner')}
+                    variant={selectedLevel === SkillLevel.BEGINNER ? 'default' : 'outline'}
+                    onClick={() => setSelectedLevel(SkillLevel.BEGINNER)}
                     size="sm"
                   >
                     Beginner
                   </Button>
                   <Button
-                    variant={selectedLevel === 'intermediate' ? 'default' : 'outline'}
-                    onClick={() => setSelectedLevel('intermediate')}
+                    variant={selectedLevel === SkillLevel.INTERMEDIATE ? 'default' : 'outline'}
+                    onClick={() => setSelectedLevel(SkillLevel.INTERMEDIATE)}
                     size="sm"
                   >
                     Intermediate
                   </Button>
                   <Button
-                    variant={selectedLevel === 'advanced' ? 'default' : 'outline'}
-                    onClick={() => setSelectedLevel('advanced')}
+                    variant={selectedLevel === SkillLevel.ADVANCED ? 'default' : 'outline'}
+                    onClick={() => setSelectedLevel(SkillLevel.ADVANCED)}
                     size="sm"
                   >
                     Advanced
@@ -171,27 +103,28 @@ export default function Courses() {
                 className="glass border-border/50 overflow-hidden hover:shadow-lg transition-all duration-300 animate-slide-in"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="aspect-video overflow-hidden">
+                <div className="aspect-video overflow-hidden relative">
                   <img 
-                    src={course.thumbnail} 
+                    src={course.thumbnailUrl} 
                     alt={course.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
+                  {course.isFeatured && (
+                    <Badge className="absolute top-3 right-3 bg-accent/90 backdrop-blur-sm">
+                      Featured
+                    </Badge>
+                  )}
                 </div>
                 
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <Badge className={getLevelColor(course.level)}>
-                      {course.level}
+                    <Badge className={getLevelColor(course.difficultyLevel)}>
+                      {course.difficultyLevel}
                     </Badge>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                      <span className="font-medium">{course.rating}</span>
-                    </div>
                   </div>
                   <CardTitle className="text-xl line-clamp-2">{course.title}</CardTitle>
                   <CardDescription className="text-sm text-muted-foreground">
-                    by {course.instructor}
+                    Instructor ID: {course.instructorId}
                   </CardDescription>
                 </CardHeader>
                 
@@ -200,22 +133,25 @@ export default function Courses() {
                     {course.description}
                   </p>
                   
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground flex-wrap gap-2">
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      <span>{course.duration}</span>
+                      <span>{course.estimatedDurationHours}h</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>{course.students.toLocaleString()}</span>
+                      <BookOpen className="w-4 h-4" />
+                      <span>{course.learningObjectives.length} objectives</span>
                     </div>
                   </div>
                   
                   <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                    <span className="text-2xl font-bold text-primary">{course.price}</span>
-                    <Button className="bg-primary hover:bg-primary/90 glow-hover">
+                    <span className="text-2xl font-bold text-primary">${course.price}</span>
+                    <Button 
+                      className="bg-primary hover:bg-primary/90 glow-hover"
+                      onClick={() => handleEnroll(course.id)}
+                    >
                       <BookOpen className="w-4 h-4 mr-2" />
-                      Enroll Now
+                      Enroll
                     </Button>
                   </div>
                 </CardContent>
