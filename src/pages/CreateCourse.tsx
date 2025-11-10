@@ -22,7 +22,7 @@ import { createLearningMaterial } from '@/services/api/learningMaterial';
 import { createQuiz } from '@/services/api/quiz';
 
 type TopicWithContent = TopicDto & { 
-  materials: LearningMaterialDto[]; 
+  materials: (LearningMaterialDto & { file?: File })[]; 
   quizzes: QuizDto[];
   isSaved?: boolean;
 };
@@ -127,18 +127,22 @@ export default function CreateCourse() {
         
         // Save all materials
         for (const material of topic.materials) {
-          await createLearningMaterial(savedTopicId, {
-            title: material.title,
-            description: material.description,
-            contentType: material.contentType,
-            contentUrl: material.contentUrl,
-            contentText: material.contentText,
-            durationMinutes: material.durationMinutes,
-            difficultyLevel: material.difficultyLevel,
-            tags: material.tags,
-            orderIndex: material.orderIndex,
-            isActive: material.isActive,
-          });
+          await createLearningMaterial(
+            savedTopicId, 
+            {
+              title: material.title,
+              description: material.description,
+              contentType: material.contentType,
+              contentUrl: material.contentUrl,
+              contentText: material.contentText,
+              durationMinutes: material.durationMinutes,
+              difficultyLevel: material.difficultyLevel,
+              tags: material.tags,
+              orderIndex: material.orderIndex,
+              isActive: material.isActive,
+            },
+            material.file
+          );
         }
 
         // Save all quizzes
@@ -206,7 +210,7 @@ export default function CreateCourse() {
     }));
   };
 
-  const updateMaterial = (topicId: string, materialId: string, updates: Partial<LearningMaterialDto>) => {
+  const updateMaterial = (topicId: string, materialId: string, updates: Partial<LearningMaterialDto & { file?: File }>) => {
     setTopics(topics.map(topic => {
       if (topic.id === topicId) {
         return {

@@ -6,12 +6,12 @@ import { Trash2, Video, FileText, Image, HelpCircle, GripVertical } from 'lucide
 import { TopicDto, LearningMaterialDto, QuizDto, SkillLevel, MaterialType, QuizType } from '@/services/types';
 
 interface TopicItemProps {
-  topic: TopicDto & { materials: LearningMaterialDto[]; quizzes: QuizDto[] };
+  topic: TopicDto & { materials: (LearningMaterialDto & { file?: File })[]; quizzes: QuizDto[] };
   onUpdate: (updates: Partial<TopicDto>) => void;
   onDelete: () => void;
   onAddMaterial: (type: MaterialType) => void;
   onAddQuiz: () => void;
-  onUpdateMaterial: (materialId: string, updates: Partial<LearningMaterialDto>) => void;
+  onUpdateMaterial: (materialId: string, updates: Partial<LearningMaterialDto & { file?: File }>) => void;
   onDeleteMaterial: (materialId: string) => void;
   onUpdateQuiz: (quizId: string, updates: Partial<QuizDto>) => void;
   onDeleteQuiz: (quizId: string) => void;
@@ -111,12 +111,24 @@ export default function TopicItem({
                       onChange={(e) => onUpdateMaterial(material.id, { title: e.target.value })}
                       className="bg-secondary"
                     />
-                    <Input
-                      placeholder="Content URL"
-                      value={material.contentUrl}
-                      onChange={(e) => onUpdateMaterial(material.id, { contentUrl: e.target.value })}
-                      className="bg-secondary"
-                    />
+                    <div className="space-y-2">
+                      <Input
+                        type="file"
+                        accept={material.contentType === MaterialType.VIDEO ? 'video/*' : material.contentType === MaterialType.IMAGE ? 'image/*' : '.pdf,.doc,.docx,.ppt,.pptx'}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            onUpdateMaterial(material.id, { file });
+                          }
+                        }}
+                        className="bg-secondary"
+                      />
+                      {material.file && (
+                        <p className="text-xs text-muted-foreground">
+                          Selected: {material.file.name}
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
