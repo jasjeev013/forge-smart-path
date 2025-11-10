@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { loginIn } from '@/services/auth';
+import { getUserDetails } from '@/services/users';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,6 +25,10 @@ export default function Login() {
       if (response.result) {
         localStorage.setItem('token', response.object.token);
         toast.success('Welcome back! Login successful.');
+
+        const userData = await getUserDetails();
+        localStorage.setItem('user', JSON.stringify(userData.object));
+     
         
         setTimeout(() => {
           navigate(`/${response.object.role.toLowerCase()}/dashboard`);

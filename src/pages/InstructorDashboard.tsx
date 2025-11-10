@@ -14,6 +14,8 @@ import {
   Trash2,
   Plus
 } from 'lucide-react';
+import { useEffect } from 'react';
+import { getInstructorProfile } from '@/services/api/instructor';
 
 const navigationItems = [
   { label: 'Dashboard', path: '/instructor/dashboard', icon: <TrendingUp className="w-4 h-4" /> },
@@ -55,6 +57,18 @@ export default function InstructorDashboard() {
     { type: 'pdf', name: 'JavaScript Cheat Sheet.pdf', course: 'Modern JavaScript ES6+', date: '3 days ago' },
     { type: 'video', name: 'List Comprehensions Tutorial', course: 'Introduction to Python', date: '1 week ago' },
   ];
+
+  useEffect(() => { 
+    const fetchInstructorProfile = async () => {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('User data from localStorage:', user);
+    if (user.role === 'INSTRUCTOR') {
+      const instructor = await getInstructorProfile(user.id);
+      localStorage.setItem('userId',instructor.object.id);
+    }
+    };
+    fetchInstructorProfile();
+  },[])
 
   return (
     <DashboardLayout role="instructor" navigationItems={navigationItems}>

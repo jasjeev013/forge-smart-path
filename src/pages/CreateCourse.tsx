@@ -118,8 +118,8 @@ export default function CreateCourse() {
         difficultyLevel: topic.difficultyLevel,
         estimatedDurationMinutes: topic.estimatedDurationMinutes,
         learningObjectives: topic.learningObjectives,
-        parentTopicId: topic.parentTopicId,
       });
+      console.log('Topic creation response:', response);
 
       if (response.result) {
         // Save materials and quizzes for this topic
