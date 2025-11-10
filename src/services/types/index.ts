@@ -15,6 +15,7 @@ export interface ApiResponseObject<T> {
   result: boolean;
   object: T;
 }
+
 export enum UserRole {
   STUDENT = "STUDENT",
   INSTRUCTOR = "INSTRUCTOR",

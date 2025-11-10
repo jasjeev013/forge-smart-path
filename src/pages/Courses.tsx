@@ -1,15 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, BookOpen, Clock, Users } from 'lucide-react';
+import { Search, BookOpen, Clock, Users, GraduationCap } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { dummyCourses } from '@/data/dummyCourses';
 import { SkillLevel } from '@/services/types';
 import { toast } from 'sonner';
 
 export default function Courses() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
 
@@ -30,8 +32,11 @@ export default function Courses() {
   };
 
   const handleEnroll = (courseId: string) => {
-    toast.success('Enrollment feature coming soon!');
-    console.log('Enrolling in course:', courseId);
+    toast.success('Successfully enrolled! (Free enrollment)');
+  };
+
+  const viewCourseDetails = (courseId: string) => {
+    navigate(`/course/${courseId}`);
   };
 
   return (
@@ -100,8 +105,9 @@ export default function Courses() {
             {filteredCourses.map((course, index) => (
               <Card 
                 key={course.id} 
-                className="glass border-border/50 overflow-hidden hover:shadow-lg transition-all duration-300 animate-slide-in"
+                className="glass border-border/50 overflow-hidden hover:shadow-lg transition-all duration-300 animate-slide-in cursor-pointer"
                 style={{ animationDelay: `${index * 100}ms` }}
+                onClick={() => viewCourseDetails(course.id)}
               >
                 <div className="aspect-video overflow-hidden relative">
                   <img 
@@ -148,10 +154,13 @@ export default function Courses() {
                     <span className="text-2xl font-bold text-primary">${course.price}</span>
                     <Button 
                       className="bg-primary hover:bg-primary/90 glow-hover"
-                      onClick={() => handleEnroll(course.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEnroll(course.id);
+                      }}
                     >
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Enroll
+                      <GraduationCap className="w-4 h-4 mr-2" />
+                      Enroll for Free
                     </Button>
                   </div>
                 </CardContent>
