@@ -32,11 +32,12 @@ export default function Courses() {
   };
 
   const handleEnroll = (courseId: string) => {
+    navigate(`/courses/${courseId}/learn`);
     toast.success('Successfully enrolled! (Free enrollment)');
   };
 
   const viewCourseDetails = (courseId: string) => {
-    navigate(`/course/${courseId}`);
+    navigate(`/courses/${courseId}`);
   };
 
   return (
