@@ -147,7 +147,7 @@ export default function CourseLearn() {
               </div>
             )}
             
-            {material.contentType === 'DOCUMENT' && (
+            {material.contentType === 'PDF' && (
               <div className="space-y-4">
                 <div className="aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
                   <div className="text-center space-y-2">
