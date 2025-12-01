@@ -58,18 +58,6 @@ export default function InstructorDashboard() {
     { type: 'video', name: 'List Comprehensions Tutorial', course: 'Introduction to Python', date: '1 week ago' },
   ];
 
-  useEffect(() => { 
-    const fetchInstructorProfile = async () => {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      console.log('User data from localStorage:', user);
-    if (user.role === 'INSTRUCTOR') {
-      const instructor = await getInstructorProfile(user.id);
-      localStorage.setItem('userId',instructor.object.id);
-    }
-    };
-    fetchInstructorProfile();
-  },[])
-
   return (
     <DashboardLayout role="instructor" navigationItems={navigationItems}>
       <div className="space-y-6">

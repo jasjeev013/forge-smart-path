@@ -34,7 +34,7 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.clear();
     setUser(null);
     toast.success('Logged out successfully');
     navigate('/');

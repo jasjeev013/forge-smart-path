@@ -12,3 +12,4 @@ export const register = async (registerRequest: RegisterRequest): Promise<ApiRes
   const response = await apiClient.post('/auth/register', registerRequest);
   return response.data;
 };
+

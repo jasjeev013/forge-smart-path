@@ -48,7 +48,7 @@ export enum SkillLevel {
 
 export enum MaterialType {
   VIDEO = "VIDEO",
-  DOCUMENT = "DOCUMENT",
+  DOCUMENT = "PDF",
   IMAGE = "IMAGE",
   TEXT = "TEXT",
   LINK = "LINK"
@@ -71,6 +71,20 @@ export interface InstructorDto {
   createdAt: string;
   updatedAt: string;
 }
+export interface StudentEnrollmentDto {
+  id?: string;
+  studentId?: string;
+  courseId?: string;
+  enrolledAt?: string;        // ISO date-time string
+  completedAt?: string;       // ISO date-time string
+
+  currentProgressPercent?: number;
+  overallScore?: number;
+  status?: string;
+
+  lastAccessedAt?: string;    // ISO date-time string
+}
+
 
 export interface CourseDto {
   id: string;

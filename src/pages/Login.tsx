@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { loginIn } from '@/services/auth';
+import { getInstructorProfile } from '@/services/api/instructor';
+import { getStudentProfile } from '@/services/api/student';
 import { getUserDetails } from '@/services/users';
 
 export default function Login() {
@@ -27,11 +29,22 @@ export default function Login() {
         toast.success('Welcome back! Login successful.');
 
         const userData = await getUserDetails();
+        localStorage.setItem('userId', userData.object.id);
         localStorage.setItem('user', JSON.stringify(userData.object));
-     
-        
+        const role = response.object.role.toLowerCase();
+
+        if(role==='student'){
+          const res = await getStudentProfile(localStorage.getItem('userId'));
+          localStorage.setItem('student_id',res.object.id);
+        }else if(role==="instructor"){
+          const res = await getInstructorProfile(localStorage.getItem('userId'));
+          console.log(res)
+          localStorage.setItem('instructor_id',res.object.id)
+        }
+
+
         setTimeout(() => {
-          navigate(`/${response.object.role.toLowerCase()}/dashboard`);
+          navigate(`/${role}/dashboard`);
         }, 500);
       } else {
         toast.error(response.message || 'Invalid credentials. Please try again.');

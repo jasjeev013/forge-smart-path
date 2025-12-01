@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,16 +6,42 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, BookOpen, Clock, Users, GraduationCap } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { dummyCourses } from '@/data/dummyCourses';
+// import { dummyCourses } from '@/data/dummyCourses';
 import { SkillLevel } from '@/services/types';
 import { toast } from 'sonner';
+import {getAllCourses,enrollCourse, getAllEnrolledCourses} from '@/services/api/course'
 
 export default function Courses() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
+  const [courses,setCourses] = useState([]);
 
-  const filteredCourses = dummyCourses.filter(course => {
+  const [enrolledCourses,setEnrolledCourses] = useState([]);
+
+  useEffect(()=>{
+    async function getCourses(){
+      const res = await getAllCourses();
+      // console.log(res.object);
+      setCourses(res.object);
+    }
+    getCourses();
+    // console.log(courses)
+  },[])
+
+  useEffect(()=>{
+    async function getEnrolledCourses(){
+      const res = await getAllEnrolledCourses();
+      setEnrolledCourses(res.object);
+    }
+    if(localStorage.getItem('student_id')){
+      getEnrolledCourses();
+    }
+  },[])
+
+  
+
+  const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLevel = selectedLevel === 'all' || course.difficultyLevel === selectedLevel;
@@ -31,9 +57,26 @@ export default function Courses() {
     }
   };
 
-  const handleEnroll = (courseId: string) => {
-    navigate(`/courses/${courseId}/learn`);
-    toast.success('Successfully enrolled! (Free enrollment)');
+ 
+
+  const handleEnroll = async  (courseId: string) => {
+    if(enrolledCourses.some((enrolled: any) => enrolled.courseId === courseId)){
+      navigate(`/courses/${courseId}/learn`);
+      return;
+    }
+    // if(!localStorage.getItem('student_id')){
+    //   toast.error('Please login to enroll in a course');
+    //   return;
+    // }
+    // console.log(courseId)
+    const res = await enrollCourse(courseId);
+    if (res.result) {
+      navigate(`/courses/${courseId}/learn`);
+       toast.success('Successfully enrolled! (Free enrollment)');
+    }else {
+       toast.success(res.message);
+
+    }
   };
 
   const viewCourseDetails = (courseId: string) => {
@@ -161,7 +204,7 @@ export default function Courses() {
                       }}
                     >
                       <GraduationCap className="w-4 h-4 mr-2" />
-                      Enroll for Free
+                      {enrolledCourses.some((enrolled: any) => enrolled.courseId === course.id) ? 'Continue Learning' : 'Enroll Now'}
                     </Button>
                   </div>
                 </CardContent>

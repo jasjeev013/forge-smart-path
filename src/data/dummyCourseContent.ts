@@ -17,7 +17,7 @@ export const dummyCourseContent = {
       "Build scalable applications using Java frameworks."
     ],
     "prerequisites": [
-      "Basic understanding of programming concepts.",
+      "Basic understanding of program,lm=sming concepts.",
       "Familiarity with object-oriented programming."
     ],
     "estimatedDurationHours": 40,
