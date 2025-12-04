@@ -1,62 +1,74 @@
+import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { 
   BookOpen, 
   Upload, 
   Users, 
   TrendingUp,
-  Video,
-  FileText,
   Edit,
-  Trash2,
+  Save,
+  X,
+  Briefcase,
+  GraduationCap,
+  Clock,
+  DollarSign,
   Plus
 } from 'lucide-react';
-import { useEffect } from 'react';
-import { getInstructorProfile } from '@/services/api/instructor';
 
 const navigationItems = [
   { label: 'Dashboard', path: '/instructor/dashboard', icon: <TrendingUp className="w-4 h-4" /> },
   { label: 'My Courses', path: '/instructor/courses', icon: <BookOpen className="w-4 h-4" /> },
-  { label: 'Upload Content', path: '/instructor/upload', icon: <Upload className="w-4 h-4" /> },
-  { label: 'Students', path: '/instructor/students', icon: <Users className="w-4 h-4" /> },
+  { label: 'Create Course', path: '/instructor/create-course', icon: <Plus className="w-4 h-4" /> },
 ];
 
-export default function InstructorDashboard() {
-  const courses = [
-    {
-      title: 'Modern JavaScript ES6+',
-      students: 1247,
-      rating: 4.8,
-      status: 'Published',
-      lessons: 24,
-      difficulty: 'Intermediate',
-    },
-    {
-      title: 'Introduction to Python',
-      students: 892,
-      rating: 4.9,
-      status: 'Published',
-      lessons: 30,
-      difficulty: 'Beginner',
-    },
-    {
-      title: 'Advanced React Patterns',
-      students: 634,
-      rating: 4.7,
-      status: 'Published',
-      lessons: 18,
-      difficulty: 'Advanced',
-    },
-  ];
+interface InstructorProfile {
+  email: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string;
+  bio: string;
+  expertiseDomains: string[];
+  qualifications: string;
+  yearsExperience: number;
+  hourlyRate: number;
+}
 
-  const recentUploads = [
-    { type: 'video', name: 'Introduction to Async/Await', course: 'Modern JavaScript ES6+', date: '2 days ago' },
-    { type: 'pdf', name: 'JavaScript Cheat Sheet.pdf', course: 'Modern JavaScript ES6+', date: '3 days ago' },
-    { type: 'video', name: 'List Comprehensions Tutorial', course: 'Introduction to Python', date: '1 week ago' },
-  ];
+export default function InstructorDashboard() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState<InstructorProfile>({
+    email: 'john.instructor@example.com',
+    firstName: 'John',
+    lastName: 'Smith',
+    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop',
+    bio: 'Passionate educator with expertise in software development and modern web technologies.',
+    expertiseDomains: ['JavaScript', 'React', 'Node.js', 'Python'],
+    qualifications: 'M.Sc. Computer Science, AWS Certified Solutions Architect',
+    yearsExperience: 8,
+    hourlyRate: 75,
+  });
+  const [editedProfile, setEditedProfile] = useState<InstructorProfile>(profile);
+
+  const handleSave = () => {
+    setProfile(editedProfile);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditedProfile(profile);
+    setIsEditing(false);
+  };
+
+  const handleExpertiseChange = (value: string) => {
+    const domains = value.split(',').map(d => d.trim()).filter(d => d);
+    setEditedProfile({ ...editedProfile, expertiseDomains: domains });
+  };
 
   return (
     <DashboardLayout role="instructor" navigationItems={navigationItems}>
@@ -67,7 +79,7 @@ export default function InstructorDashboard() {
             <h1 className="text-4xl font-bold mb-2">
               Instructor <span className="gradient-text">Dashboard</span>
             </h1>
-            <p className="text-muted-foreground">Manage your courses and engage with students</p>
+            <p className="text-muted-foreground">Manage your profile and view your stats</p>
           </div>
           <Link to="/instructor/create-course">
             <Button className="bg-primary hover:bg-primary/90 glow-hover">
@@ -82,8 +94,8 @@ export default function InstructorDashboard() {
           {[
             { label: 'Total Students', value: '2,773', icon: Users, color: 'text-primary' },
             { label: 'Active Courses', value: '3', icon: BookOpen, color: 'text-accent' },
-            { label: 'Avg. Rating', value: '4.8', icon: TrendingUp, color: 'text-success' },
-            { label: 'Total Lessons', value: '72', icon: Video, color: 'text-warning' },
+            { label: 'Avg. Rating', value: '4.8', icon: TrendingUp, color: 'text-green-500' },
+            { label: 'Total Earnings', value: '$12,450', icon: DollarSign, color: 'text-yellow-500' },
           ].map((stat, index) => (
             <Card key={index} className="glass glow-hover">
               <CardContent className="p-6">
@@ -99,116 +111,177 @@ export default function InstructorDashboard() {
           ))}
         </div>
 
-        {/* Course Management */}
+        {/* Profile Card */}
         <Card className="glass">
           <CardHeader>
-            <CardTitle>Your Courses</CardTitle>
-            <CardDescription>Manage and update your course content</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {courses.map((course, index) => (
-                <div
-                  key={index}
-                  className="p-4 rounded-lg bg-secondary/50 border border-border hover:border-primary/50 transition-all"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">{course.title}</h3>
-                        <Badge variant="outline" className="text-xs">
-                          {course.difficulty}
-                        </Badge>
-                        <Badge className="text-xs bg-success">{course.status}</Badge>
-                      </div>
-                      
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          <span>{course.students.toLocaleString()} students</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Video className="w-4 h-4" />
-                          <span>{course.lessons} lessons</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="w-4 h-4" />
-                          <span>★ {course.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Add Content
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Upload Section */}
-        <Card className="glass border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="w-5 h-5 text-primary" />
-              Quick Upload
-            </CardTitle>
-            <CardDescription>Add new content to your courses</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-4">
-              <Button variant="outline" className="h-24 flex-col gap-2">
-                <Video className="w-6 h-6 text-accent" />
-                <span>Upload Video</span>
-              </Button>
-              <Button variant="outline" className="h-24 flex-col gap-2">
-                <FileText className="w-6 h-6 text-warning" />
-                <span>Upload PDF</span>
-              </Button>
-              <Button variant="outline" className="h-24 flex-col gap-2">
-                <Plus className="w-6 h-6 text-success" />
-                <span>Create Quiz</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Uploads */}
-        <Card className="glass">
-          <CardHeader>
-            <CardTitle>Recent Uploads</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {recentUploads.map((upload, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                <div className="flex items-center gap-3">
-                  {upload.type === 'video' ? (
-                    <Video className="w-5 h-5 text-accent" />
-                  ) : (
-                    <FileText className="w-5 h-5 text-warning" />
-                  )}
-                  <div>
-                    <p className="font-medium">{upload.name}</p>
-                    <p className="text-sm text-muted-foreground">{upload.course}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">{upload.date}</span>
-                  <Button variant="ghost" size="sm">
-                    <Trash2 className="w-4 h-4" />
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>Manage your instructor profile</CardDescription>
+              </div>
+              {!isEditing ? (
+                <Button variant="outline" onClick={() => setIsEditing(true)}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleCancel}>
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
                   </Button>
                 </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Avatar Section */}
+              <div className="flex flex-col items-center gap-4">
+                <img
+                  src={isEditing ? editedProfile.avatarUrl : profile.avatarUrl}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+                />
+                {isEditing && (
+                  <Input
+                    placeholder="Avatar URL"
+                    value={editedProfile.avatarUrl}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, avatarUrl: e.target.value })}
+                    className="max-w-xs"
+                  />
+                )}
               </div>
-            ))}
+
+              {/* Profile Details */}
+              <div className="flex-1 grid gap-6">
+                {/* Basic Info */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>First Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.firstName}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{profile.firstName}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Last Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.lastName}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{profile.lastName}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  {isEditing ? (
+                    <Input
+                      type="email"
+                      value={editedProfile.email}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                    />
+                  ) : (
+                    <p className="text-muted-foreground">{profile.email}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Bio</Label>
+                  {isEditing ? (
+                    <Textarea
+                      value={editedProfile.bio}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
+                      rows={3}
+                    />
+                  ) : (
+                    <p className="text-muted-foreground">{profile.bio}</p>
+                  )}
+                </div>
+
+                {/* Professional Info */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      Expertise Domains
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.expertiseDomains.join(', ')}
+                        onChange={(e) => handleExpertiseChange(e.target.value)}
+                        placeholder="Separate with commas"
+                      />
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {profile.expertiseDomains.map((domain, i) => (
+                          <Badge key={i} variant="secondary">{domain}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4" />
+                      Qualifications
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.qualifications}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, qualifications: e.target.value })}
+                      />
+                    ) : (
+                      <p className="text-muted-foreground">{profile.qualifications}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Years of Experience
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={editedProfile.yearsExperience}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, yearsExperience: parseInt(e.target.value) || 0 })}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{profile.yearsExperience} years</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4" />
+                      Hourly Rate
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={editedProfile.hourlyRate}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, hourlyRate: parseFloat(e.target.value) || 0 })}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">${profile.hourlyRate}/hr</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

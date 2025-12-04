@@ -100,7 +100,7 @@ export const dummyCourseContent = {
           "topicId": "topic-id-001",
           "title": "Understanding Arrays in Java",
           "description": "An introduction to arrays, how to declare, initialize, and access elements in an array.",
-          "contentType": MaterialType.DOCUMENT,
+          "contentType": MaterialType.DOCUMENT,  // This is PDF type
           "contentUrl": "http://example.com/java-arrays",
           "contentText": "This article explains how to work with arrays in Java.",
           "durationMinutes": 40,
