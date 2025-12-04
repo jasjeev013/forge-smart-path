@@ -1,248 +1,290 @@
 import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Link } from 'react-router-dom';
 import { 
   BookOpen, 
-  TrendingUp, 
-  Target,
-  Award,
-  Clock,
+  BarChart3, 
+  Home,
   Play,
-  CheckCircle2
+  CheckCircle,
+  Clock,
+  Award,
+  ExternalLink
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { CourseDto, StudentEnrollmentDto } from '@/services/types';
-import { getAllCompletedCourses, getCoursesForEnrolledCourses } from '@/services/api/course';
+import { SkillLevel } from '@/services/types';
 
 const navigationItems = [
-  { label: 'Dashboard', path: '/student/dashboard', icon: <TrendingUp className="w-4 h-4" /> },
+  { label: 'Dashboard', path: '/student/dashboard', icon: <Home className="w-4 h-4" /> },
   { label: 'My Courses', path: '/student/courses', icon: <BookOpen className="w-4 h-4" /> },
-  { label: 'Progress', path: '/student/progress', icon: <Target className="w-4 h-4" /> },
+  { label: 'Progress', path: '/student/progress', icon: <BarChart3 className="w-4 h-4" /> },
 ];
 
+interface StudentCourse {
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  difficultyLevel: SkillLevel;
+  progress: number;
+  completedLessons: number;
+  totalLessons: number;
+  nextLesson?: string;
+  estimatedTime?: string;
+  completedDate?: string;
+  score?: number;
+  certificateUrl?: string;
+}
+
+const continueLearningCourses: StudentCourse[] = [
+  {
+    id: 'course-1',
+    title: 'Modern JavaScript ES6+',
+    description: 'Master modern JavaScript features and best practices for web development.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400',
+    difficultyLevel: SkillLevel.INTERMEDIATE,
+    progress: 65,
+    completedLessons: 16,
+    totalLessons: 24,
+    nextLesson: 'Async/Await Patterns',
+    estimatedTime: '45 min',
+  },
+  {
+    id: 'course-2',
+    title: 'Introduction to Python',
+    description: 'Learn Python from scratch with hands-on projects and exercises.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400',
+    difficultyLevel: SkillLevel.BEGINNER,
+    progress: 30,
+    completedLessons: 9,
+    totalLessons: 30,
+    nextLesson: 'Working with Lists',
+    estimatedTime: '1h 20min',
+  },
+  {
+    id: 'course-3',
+    title: 'React Fundamentals',
+    description: 'Build modern web applications with React and its ecosystem.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
+    difficultyLevel: SkillLevel.INTERMEDIATE,
+    progress: 85,
+    completedLessons: 17,
+    totalLessons: 20,
+    nextLesson: 'Custom Hooks',
+    estimatedTime: '30 min',
+  },
+];
+
+const completedCourses: StudentCourse[] = [
+  {
+    id: 'course-4',
+    title: 'HTML & CSS Basics',
+    description: 'Foundation course for web development with HTML5 and CSS3.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1621839673705-6617adf9e890?w=400',
+    difficultyLevel: SkillLevel.BEGINNER,
+    progress: 100,
+    completedLessons: 20,
+    totalLessons: 20,
+    completedDate: '2025-10-15',
+    score: 92,
+    certificateUrl: '#',
+  },
+  {
+    id: 'course-5',
+    title: 'Git & GitHub Essentials',
+    description: 'Version control fundamentals for modern software development.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400',
+    difficultyLevel: SkillLevel.BEGINNER,
+    progress: 100,
+    completedLessons: 15,
+    totalLessons: 15,
+    completedDate: '2025-09-28',
+    score: 88,
+    certificateUrl: '#',
+  },
+];
+
+const getDifficultyColor = (level: SkillLevel) => {
+  switch (level) {
+    case SkillLevel.BEGINNER:
+      return 'bg-green-500/20 text-green-500';
+    case SkillLevel.INTERMEDIATE:
+      return 'bg-yellow-500/20 text-yellow-500';
+    case SkillLevel.ADVANCED:
+      return 'bg-red-500/20 text-red-500';
+    default:
+      return 'bg-muted text-muted-foreground';
+  }
+};
+
 export default function StudentCourses() {
-  const navigate = useNavigate();
-  const [enrolledCourses, setEnrolledCourses] = useState<CourseDto[]>([])
-  const [completedCourses, setCompletedCourses] = useState<CourseDto[]>([])
-
-  useEffect(() => {
-    async function fetchEnrolledCourses() {
-      const res = await getCoursesForEnrolledCourses();
-      setEnrolledCourses(res.object);
-    }
-    fetchEnrolledCourses();
-  },[])
-
-  useEffect(() => {
-    async function fetchCompletedCourses() {
-      // Implement API call to fetch completed courses
-      const res = await getAllCompletedCourses();
-      setCompletedCourses(res.object);
-    }
-    fetchCompletedCourses();
-  },[])
-  // const enrolledCourses = [
-  //   {
-  //     id: '1',
-  //     title: 'Modern JavaScript ES6+',
-  //     progress: 75,
-  //     totalLessons: 24,
-  //     completedLessons: 18,
-  //     nextLesson: 'Arrow Functions & This Context',
-  //     thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400',
-  //     difficulty: 'Intermediate',
-  //     estimatedTime: '6h remaining',
-  //   },
-  //   {
-  //     id: '2',
-  //     title: 'Introduction to Python',
-  //     progress: 45,
-  //     totalLessons: 30,
-  //     completedLessons: 14,
-  //     nextLesson: 'List Comprehensions',
-  //     thumbnailUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400',
-  //     difficulty: 'Beginner',
-  //     estimatedTime: '12h remaining',
-  //   },
-  //   {
-  //     id: '3',
-  //     title: 'Data Structures & Algorithms',
-  //     progress: 30,
-  //     totalLessons: 40,
-  //     completedLessons: 12,
-  //     nextLesson: 'Binary Search Trees',
-  //     thumbnailUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=400',
-  //     difficulty: 'Advanced',
-  //     estimatedTime: '20h remaining',
-  //   },
-  // ];
-
-  // const completedCourses = [
-  //   {
-  //     id: '4',
-  //     title: 'HTML & CSS Fundamentals',
-  //     completedDate: '2025-11-15',
-  //     score: 95,
-  //     totalLessons: 20,
-  //     thumbnailUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=400',
-  //     difficulty: 'Beginner',
-  //     certificateUrl: '#',
-  //   },
-  //   {
-  //     id: '5',
-  //     title: 'Git & Version Control',
-  //     completedDate: '2025-10-28',
-  //     score: 88,
-  //     totalLessons: 15,
-  //     thumbnailUrl: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400',
-  //     difficulty: 'Beginner',
-  //     certificateUrl: '#',
-  //   },
-  //   {
-  //     id: '6',
-  //     title: 'React Basics',
-  //     completedDate: '2025-10-10',
-  //     score: 92,
-  //     totalLessons: 28,
-  //     thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
-  //     difficulty: 'Intermediate',
-  //     certificateUrl: '#',
-  //   },
-  // ];
-
   return (
     <DashboardLayout role="student" navigationItems={navigationItems}>
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="gradient-text">My Courses</span>
+            My <span className="gradient-text">Courses</span>
           </h1>
-          <p className="text-muted-foreground">Track your learning journey and achievements</p>
+          <p className="text-muted-foreground">Track your learning journey and continue where you left off</p>
         </div>
 
-        {/* Continue Learning Section */}
-        <Card className="glass">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Play className="w-5 h-5 text-primary" />
-              Continue Learning
-            </CardTitle>
-            <CardDescription>Pick up where you left off</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {enrolledCourses.map((course) => (
-              <div key={course.id} className="p-4 rounded-lg bg-secondary/50 border border-border hover:border-primary/50 transition-all">
-                <div className="flex gap-4">
-                  <img 
-                    src={course.thumbnailUrl} 
-                    alt={course.title}
-                    className="w-32 h-20 object-cover rounded-lg"
-                  />
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-lg">{course.title}</h3>
-                          <Badge variant="outline" className="text-xs">
-                            {course.difficulty}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Next: {course.nextLesson}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <BookOpen className="w-3 h-3" />
-                            {course.completedLessons}/{course.totalLessons} lessons
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {course.estimatedTime}
-                          </span>
-                        </div>
-                      </div>
-                      <Button 
-                        size="sm"
-                        onClick={() => navigate(`/courses/${course.id}/learn`)}
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        Continue
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium text-primary">{course.progress}%</span>
-                      </div>
-                      <Progress value={course.progress} className="h-2" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="continue" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="continue">Continue Learning</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
+          </TabsList>
 
-        {/* Completed Courses Section */}
-        <Card className="glass">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-success" />
-              Completed Courses
-            </CardTitle>
-            <CardDescription>Your achievements and certifications</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {completedCourses.map((course) => (
-                <div 
-                  key={course.id}
-                  className="p-4 rounded-lg bg-secondary/50 border border-border hover:border-success/50 transition-all space-y-3"
-                >
-                  <img 
-                    src={course.thumbnailUrl} 
-                    alt={course.title}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold">{course.title}</h3>
-                      <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {course.difficulty}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        Score: {course.score}%
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p className="flex items-center gap-1">
-                        <BookOpen className="w-3 h-3" />
-                        {course.totalLessons} lessons completed
-                      </p>
-                      <p>Completed: {new Date(course.completedDate).toLocaleDateString()}</p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full mt-2"
-                      onClick={() => window.open(course.certificateUrl, '_blank')}
-                    >
-                      <Award className="w-4 h-4 mr-2" />
-                      View Certificate
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Continue Learning Tab */}
+          <TabsContent value="continue" className="space-y-4">
+            {continueLearningCourses.length === 0 ? (
+              <Card className="glass">
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">No courses in progress. Start learning!</p>
+                  <Link to="/courses">
+                    <Button className="mt-4">Browse Courses</Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {continueLearningCourses.map((course) => (
+                  <Card key={course.id} className="glass hover:border-primary/50 transition-all">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row gap-6">
+                        <img
+                          src={course.thumbnailUrl}
+                          alt={course.title}
+                          className="w-full md:w-48 h-32 object-cover rounded-lg"
+                        />
+                        <div className="flex-1 space-y-4">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-xl font-semibold">{course.title}</h3>
+                              <Badge className={getDifficultyColor(course.difficultyLevel)}>
+                                {course.difficultyLevel}
+                              </Badge>
+                            </div>
+                            <p className="text-muted-foreground text-sm line-clamp-2">
+                              {course.description}
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">
+                                {course.completedLessons} of {course.totalLessons} lessons
+                              </span>
+                              <span className="font-medium">{course.progress}%</span>
+                            </div>
+                            <Progress value={course.progress} className="h-2" />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Play className="w-4 h-4" />
+                                <span>Next: {course.nextLesson}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{course.estimatedTime}</span>
+                              </div>
+                            </div>
+                            <Link to={`/courses/${course.id}/learn/enroll-1`}>
+                              <Button>
+                                <Play className="w-4 h-4 mr-2" />
+                                Continue
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Completed Tab */}
+          <TabsContent value="completed" className="space-y-4">
+            {completedCourses.length === 0 ? (
+              <Card className="glass">
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">No completed courses yet. Keep learning!</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {completedCourses.map((course) => (
+                  <Card key={course.id} className="glass hover:border-primary/50 transition-all">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row gap-6">
+                        <div className="relative">
+                          <img
+                            src={course.thumbnailUrl}
+                            alt={course.title}
+                            className="w-full md:w-48 h-32 object-cover rounded-lg"
+                          />
+                          <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
+                            <CheckCircle className="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                        <div className="flex-1 space-y-4">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-xl font-semibold">{course.title}</h3>
+                              <Badge className={getDifficultyColor(course.difficultyLevel)}>
+                                {course.difficultyLevel}
+                              </Badge>
+                              <Badge className="bg-green-500/20 text-green-500">
+                                Completed
+                              </Badge>
+                            </div>
+                            <p className="text-muted-foreground text-sm line-clamp-2">
+                              {course.description}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Award className="w-4 h-4 text-yellow-500" />
+                              <span>Score: {course.score}%</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="w-4 h-4" />
+                              <span>{course.totalLessons} lessons</span>
+                            </div>
+                            <span>Completed: {course.completedDate}</span>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Link to={`/courses/${course.id}/learn/enroll-1`}>
+                              <Button variant="outline" size="sm">
+                                <Play className="w-4 h-4 mr-2" />
+                                Review Course
+                              </Button>
+                            </Link>
+                            {course.certificateUrl && (
+                              <Button variant="outline" size="sm">
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                View Certificate
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
