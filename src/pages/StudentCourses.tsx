@@ -13,6 +13,9 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { CourseDto, StudentEnrollmentDto } from '@/services/types';
+import { getAllCompletedCourses, getCoursesForEnrolledCourses } from '@/services/api/course';
 
 const navigationItems = [
   { label: 'Dashboard', path: '/student/dashboard', icon: <TrendingUp className="w-4 h-4" /> },
@@ -22,75 +25,93 @@ const navigationItems = [
 
 export default function StudentCourses() {
   const navigate = useNavigate();
+  const [enrolledCourses, setEnrolledCourses] = useState<CourseDto[]>([])
+  const [completedCourses, setCompletedCourses] = useState<CourseDto[]>([])
 
-  const continueLearningCourses = [
-    {
-      id: '1',
-      title: 'Modern JavaScript ES6+',
-      progress: 75,
-      totalLessons: 24,
-      completedLessons: 18,
-      nextLesson: 'Arrow Functions & This Context',
-      thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400',
-      difficulty: 'Intermediate',
-      estimatedTime: '6h remaining',
-    },
-    {
-      id: '2',
-      title: 'Introduction to Python',
-      progress: 45,
-      totalLessons: 30,
-      completedLessons: 14,
-      nextLesson: 'List Comprehensions',
-      thumbnailUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400',
-      difficulty: 'Beginner',
-      estimatedTime: '12h remaining',
-    },
-    {
-      id: '3',
-      title: 'Data Structures & Algorithms',
-      progress: 30,
-      totalLessons: 40,
-      completedLessons: 12,
-      nextLesson: 'Binary Search Trees',
-      thumbnailUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=400',
-      difficulty: 'Advanced',
-      estimatedTime: '20h remaining',
-    },
-  ];
+  useEffect(() => {
+    async function fetchEnrolledCourses() {
+      const res = await getCoursesForEnrolledCourses();
+      setEnrolledCourses(res.object);
+    }
+    fetchEnrolledCourses();
+  },[])
 
-  const completedCourses = [
-    {
-      id: '4',
-      title: 'HTML & CSS Fundamentals',
-      completedDate: '2025-11-15',
-      score: 95,
-      totalLessons: 20,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=400',
-      difficulty: 'Beginner',
-      certificateUrl: '#',
-    },
-    {
-      id: '5',
-      title: 'Git & Version Control',
-      completedDate: '2025-10-28',
-      score: 88,
-      totalLessons: 15,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400',
-      difficulty: 'Beginner',
-      certificateUrl: '#',
-    },
-    {
-      id: '6',
-      title: 'React Basics',
-      completedDate: '2025-10-10',
-      score: 92,
-      totalLessons: 28,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
-      difficulty: 'Intermediate',
-      certificateUrl: '#',
-    },
-  ];
+  useEffect(() => {
+    async function fetchCompletedCourses() {
+      // Implement API call to fetch completed courses
+      const res = await getAllCompletedCourses();
+      setCompletedCourses(res.object);
+    }
+    fetchCompletedCourses();
+  },[])
+  // const enrolledCourses = [
+  //   {
+  //     id: '1',
+  //     title: 'Modern JavaScript ES6+',
+  //     progress: 75,
+  //     totalLessons: 24,
+  //     completedLessons: 18,
+  //     nextLesson: 'Arrow Functions & This Context',
+  //     thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400',
+  //     difficulty: 'Intermediate',
+  //     estimatedTime: '6h remaining',
+  //   },
+  //   {
+  //     id: '2',
+  //     title: 'Introduction to Python',
+  //     progress: 45,
+  //     totalLessons: 30,
+  //     completedLessons: 14,
+  //     nextLesson: 'List Comprehensions',
+  //     thumbnailUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400',
+  //     difficulty: 'Beginner',
+  //     estimatedTime: '12h remaining',
+  //   },
+  //   {
+  //     id: '3',
+  //     title: 'Data Structures & Algorithms',
+  //     progress: 30,
+  //     totalLessons: 40,
+  //     completedLessons: 12,
+  //     nextLesson: 'Binary Search Trees',
+  //     thumbnailUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=400',
+  //     difficulty: 'Advanced',
+  //     estimatedTime: '20h remaining',
+  //   },
+  // ];
+
+  // const completedCourses = [
+  //   {
+  //     id: '4',
+  //     title: 'HTML & CSS Fundamentals',
+  //     completedDate: '2025-11-15',
+  //     score: 95,
+  //     totalLessons: 20,
+  //     thumbnailUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=400',
+  //     difficulty: 'Beginner',
+  //     certificateUrl: '#',
+  //   },
+  //   {
+  //     id: '5',
+  //     title: 'Git & Version Control',
+  //     completedDate: '2025-10-28',
+  //     score: 88,
+  //     totalLessons: 15,
+  //     thumbnailUrl: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400',
+  //     difficulty: 'Beginner',
+  //     certificateUrl: '#',
+  //   },
+  //   {
+  //     id: '6',
+  //     title: 'React Basics',
+  //     completedDate: '2025-10-10',
+  //     score: 92,
+  //     totalLessons: 28,
+  //     thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
+  //     difficulty: 'Intermediate',
+  //     certificateUrl: '#',
+  //   },
+  // ];
 
   return (
     <DashboardLayout role="student" navigationItems={navigationItems}>
@@ -113,7 +134,7 @@ export default function StudentCourses() {
             <CardDescription>Pick up where you left off</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {continueLearningCourses.map((course) => (
+            {enrolledCourses.map((course) => (
               <div key={course.id} className="p-4 rounded-lg bg-secondary/50 border border-border hover:border-primary/50 transition-all">
                 <div className="flex gap-4">
                   <img 

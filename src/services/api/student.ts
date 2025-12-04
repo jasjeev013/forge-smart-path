@@ -24,3 +24,12 @@ export const getStudentProfile = async (
   console.log('Fetched student profile for user ID:', userId, response.data);
   return response.data;
 };
+
+export const getStudentCompletedLearningMaterialForCourse = async (
+  enrollmentId: string,
+): Promise<ApiResponseObject<string[]>> => {
+  const response = await apiClient.get<ApiResponseObject<string[]>>(
+    `/progress/get/${enrollmentId}`,
+  );
+  return response.data;
+};

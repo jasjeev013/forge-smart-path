@@ -60,23 +60,31 @@ export default function Courses() {
  
 
   const handleEnroll = async  (courseId: string) => {
-    if(enrolledCourses.some((enrolled: any) => enrolled.courseId === courseId)){
-      navigate(`/courses/${courseId}/learn`);
+    console.log(enrolledCourses)
+    console.log(courseId)
+    const enrolled = enrolledCourses.find((e: any) => e.courseId === courseId);
+
+    if (enrolled) {
+      navigate(`/courses/${courseId}/learn/${enrolled.id}`);
       return;
     }
+
+    console.log("Re enrolling bruhhh")
+    const res = await enrollCourse(courseId);
+
+    if (res.result) {
+      navigate(`/courses/${courseId}/learn/${res.object.id}`);
+      toast.success('Successfully enrolled! (Free enrollment)');
+    } else {
+      toast.success(res.message);
+    }
+
     // if(!localStorage.getItem('student_id')){
     //   toast.error('Please login to enroll in a course');
     //   return;
     // }
     // console.log(courseId)
-    const res = await enrollCourse(courseId);
-    if (res.result) {
-      navigate(`/courses/${courseId}/learn`);
-       toast.success('Successfully enrolled! (Free enrollment)');
-    }else {
-       toast.success(res.message);
-
-    }
+    
   };
 
   const viewCourseDetails = (courseId: string) => {

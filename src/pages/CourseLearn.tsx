@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,24 +7,61 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Video, FileText, Link as LinkIcon, HelpCircle, Clock, Play, CheckCircle2 } from 'lucide-react';
-import { dummyCourseContent } from '@/data/dummyCourseContent';
-import { LearningMaterialDto, QuizDto } from '@/services/types';
+// import { dummyCourseContent } from '@/data/dummyCourseContent';
+import { toast } from 'sonner';
+import {  CourseStructure, LearningMaterialDto, QuizDto } from '@/services/types';
+import { getCourseById, markLearningMaterialCompleted } from '@/services/api/course';
+import { getStudentCompletedLearningMaterialForCourse } from '@/services/api/student';
 
 type ContentItem = (LearningMaterialDto | QuizDto) & { type: 'material' | 'quiz' };
 
 export default function CourseLearn() {
-  const { courseId } = useParams();
+  const { courseId,enrollmentId } = useParams();
   const navigate = useNavigate();
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
+  const [course,setCourse] = useState<CourseStructure | null>(null);
+  
+  // const [completedLearningMaterials, setCompletedLearningMaterials] = useState<Set<string>>(new Set());
+  
 
-  const courseData = dummyCourseContent;
+
+  useEffect(() => {
+    async function fetchCourse() {
+      // In a real app, fetch course details by courseId.
+      const course = await getCourseById(courseId);
+      console.log('Fetched course:', course);
+      setCourse(course.object);
+    }
+    fetchCourse();
+    // console.log(enrollmentId)
+  }, [courseId]);
+
+  useEffect(() => {
+    async function fetchCompletedLearningMaterials() {
+      const res = await getStudentCompletedLearningMaterialForCourse(enrollmentId);
+      console.log('Fetched completed learning materials:', res);
+      setCompletedItems(new Set(res.object));
+    }
+    fetchCompletedLearningMaterials();
+  }, [courseId]);
+
+  if (!course) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading course...</p>
+      </div>
+    );
+  }
+
+  // For demo purposes, we use dummy data. In a real app, fetch course content by courseId.
+  // const courseData = dummyCourseContent;
 
   const getContentIcon = (contentType: string) => {
     switch (contentType) {
       case 'VIDEO': return <Video className="w-4 h-4" />;
       case 'TEXT': return <FileText className="w-4 h-4" />;
-      case 'DOCUMENT': return <FileText className="w-4 h-4" />;
+      case 'PDF': return <FileText className="w-4 h-4" />;
       case 'LINK': return <LinkIcon className="w-4 h-4" />;
       default: return <FileText className="w-4 h-4" />;
     }
@@ -34,9 +71,18 @@ export default function CourseLearn() {
     setSelectedContent({ ...item, type });
   };
 
-  const handleMarkComplete = () => {
+  const handleMarkComplete = async () => {
     if (selectedContent) {
-      setCompletedItems(prev => new Set([...prev, selectedContent.id]));
+
+      const res = await markLearningMaterialCompleted(enrollmentId,selectedContent.id,courseId);
+      if(res.result){
+        toast.success('Marked as complete!');
+        console.log('Marked as complete:', selectedContent.id);
+        setCompletedItems(prev => new Set([...prev, selectedContent.id]));
+      }else{
+        toast.error('Failed to mark as complete.');
+        return;
+      }
     }
   };
 
@@ -206,7 +252,7 @@ export default function CourseLearn() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="font-semibold">{courseData.course.title}</h1>
+            <h1 className="font-semibold">{course.title}</h1>
           </div>
         </div>
       </header>
@@ -217,8 +263,8 @@ export default function CourseLearn() {
           <ScrollArea className="h-[calc(100vh-4rem)]">
             <div className="p-4">
               <h2 className="font-semibold mb-4">Course Content</h2>
-              <Accordion type="multiple" defaultValue={courseData.fullTopic.map(t => t.topic.id)}>
-                {courseData.fullTopic.map((topicData) => (
+              <Accordion type="multiple" defaultValue={course.fullTopics.map(t => t.topic.id)}>
+                {course.fullTopics.map((topicData) => (
                   <AccordionItem key={topicData.topic.id} value={topicData.topic.id}>
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex-1 text-left">

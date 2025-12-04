@@ -1,5 +1,6 @@
 import apiClient from './client';
-import { CourseDto, ApiResponseObject,StudentEnrollmentDto } from '../types';
+import { CourseDto, ApiResponseObject,StudentEnrollmentDto, CourseStructure } from '../types';
+import { time } from 'console';
 
 export const createCourse = async (
   instructorId: string,
@@ -30,6 +31,32 @@ export const getAllEnrolledCourses = async (): Promise<ApiResponseObject<Student
   const response = await apiClient.get<ApiResponseObject<StudentEnrollmentDto[]>>(`/enroll/get/${studentId}`);
   return response.data;
 };
+export const getCoursesForEnrolledCourses = async (): Promise<ApiResponseObject<CourseDto[]>> => {
+  const studentId = localStorage.getItem('student_id');
+  const response = await apiClient.get<ApiResponseObject<CourseDto[]>>(`/enroll/get/courses/${studentId}`);
+  return response.data;
+};
 
+export const getAllCompletedCourses = async (): Promise<ApiResponseObject<CourseDto[]>> => {
+  const studentId = localStorage.getItem('student_id');
+  const response = await apiClient.get<ApiResponseObject<CourseDto[]>>(`/enroll/get/courses/completed/${studentId}`);
+  return response.data;
+};
+export const getCourseById = async (courseId: string): Promise<ApiResponseObject<CourseStructure>> => {
+  const response = await apiClient.get<ApiResponseObject<CourseStructure>>(`/course/getFull/${courseId}`);
+  return response.data;
+};
 
-    
+export const markLearningMaterialCompleted = async (enrollId: string, materialId: string,courseId:string): Promise<ApiResponseObject<StudentEnrollmentDto>> => {
+  const response = await apiClient.post<ApiResponseObject<StudentEnrollmentDto>>(`/progress/update/${enrollId}/${materialId}`,
+  {
+    // body can be empty
+    courseId: courseId,
+    completed: true,
+    emotionalFeedback:'CONFIDENT',
+    understandingLevel:'GOOD',
+    timeSpentMinutes: 5
+  }
+  );
+  return response.data;
+};

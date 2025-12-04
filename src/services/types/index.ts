@@ -153,3 +153,87 @@ export interface QuizDto {
   updatedAt: string;
 }
 
+interface Course {
+  id: string;
+  subjectId: string | null;
+  instructorId: string;
+  title: string;
+  description: string;
+  difficultyLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
+  thumbnailUrl: string;
+  learningObjectives: string[];
+  prerequisites: string[];
+  estimatedDurationHours: number;
+  isPublished: boolean;
+  isFeatured: boolean;
+  price: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Topic {
+  id: string;
+  courseId: string;
+  parentTopicId: string | null;
+  title: string;
+  description: string;
+  orderIndex: number;
+  difficultyLevel:"BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
+  estimatedDurationMinutes: number;
+  learningObjectives: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface LearningMaterial {
+  id: string;
+  topicId: string;
+  title: string;
+  description: string;
+  contentType: "VIDEO" | "PDF" | "ARTICLE" | "INTERACTIVE" | "LINK";
+  contentUrl: string;
+  contentText: string;
+  durationMinutes: number;
+  difficultyLevel:  "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
+  tags: string[];
+  orderIndex: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FullTopic {
+  learningMaterial: LearningMaterial[];
+  topic: Topic;
+  quizzes: any[]; // This could be more specific depending on the quiz structure
+}
+
+export interface CourseStructure {
+  fullTopics: FullTopic[];
+  course: Course;
+}
+
+export interface StudentProgressDto {
+  id: string;
+  enrollmentId: string;
+  courseId: string;
+  learningMaterialId: string;
+
+  completedAt: string | null; 
+
+  completed: boolean | null;
+  timeSpentMinutes: number | null;
+
+  understandingLevel: UnderstandingLevel | null;
+  notes: string | null;
+  emotionalFeedback: EmotionalState | null;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Enums
+export type UnderstandingLevel = "POOR" | "FAIR" | "GOOD" | "EXCELLENT";
+
+export type EmotionalState = "CONFUSED" | "CONFIDENT" | "FRUSTRATED" | "EXCITED" | "NEUTRAL" | "STRUGGLING";
+
