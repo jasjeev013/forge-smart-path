@@ -153,6 +153,28 @@ export interface QuizDto {
   updatedAt: string;
 }
 
+export interface QuizQuestionDto {
+  id: string;
+  quizId: string;
+  questionType: QuestionType;
+  questionText: string;
+  options: Record<string, string>;
+  correctAnswer: string;
+  explanation: string;
+  difficultyLevel: SkillLevel;
+  points: number;
+  orderIndex: number;
+  isAiGenerated: boolean;
+  aiGenerationMetadata: Record<string, any>;
+  createdAt: string; // or Date, depending on how it's serialized
+}
+type QuestionType = "MCQ" | "TRUE_FALSE" ;
+
+export interface FullQuizDto{
+  quizDto: QuizDto;
+  quizQuestions: QuizQuestionDto[];
+}
+
 interface Course {
   id: string;
   subjectId: string | null;
