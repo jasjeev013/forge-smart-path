@@ -6,12 +6,12 @@ import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import CourseBasicInfo from '@/components/course/CourseBasicInfo';
-import TopicItem from '@/components/course/TopicItem';
+import TopicItem, { QuizWithQuestions } from '@/components/course/TopicItem';
 import { 
   CourseDto, 
   TopicDto, 
   LearningMaterialDto, 
-  QuizDto, 
+  QuizQuestionDto,
   SkillLevel, 
   MaterialType,
   QuizType 
@@ -19,11 +19,11 @@ import {
 import { addThumbnailURL, createCourse } from '@/services/api/course';
 import { createTopic } from '@/services/api/topic';
 import { createLearningMaterial } from '@/services/api/learningMaterial';
-import { createQuiz } from '@/services/api/quiz';
+import { createFullQuiz } from '@/services/api/quiz';
 
 type TopicWithContent = TopicDto & { 
   materials: (LearningMaterialDto & { file?: File })[]; 
-  quizzes: QuizDto[];
+  quizzes: QuizWithQuestions[];
   isSaved?: boolean;
 };
 
@@ -54,7 +54,6 @@ export default function CreateCourse() {
 
     setIsSavingCourse(true);
     try {
-      // Get instructorId from localStorage or user context
       const userId = localStorage.getItem('instructor_id');
       if (!userId) {
         toast.error('User not found. Please login again.');
@@ -134,7 +133,6 @@ export default function CreateCourse() {
       console.log('Topic creation response:', response);
 
       if (response.result) {
-        // Save materials and quizzes for this topic
         const savedTopicId = response.object.id;
         
         // Save all materials
@@ -157,19 +155,45 @@ export default function CreateCourse() {
           );
         }
 
-        // Save all quizzes
+        // Save all quizzes with questions using createFullQuiz
         for (const quiz of topic.quizzes) {
-          await createQuiz(savedTopicId, {
-            title: quiz.title,
-            description: quiz.description,
-            quizType: quiz.quizType,
-            difficultyLevel: quiz.difficultyLevel,
-            timeLimitMinutes: quiz.timeLimitMinutes,
-            totalQuestions: quiz.totalQuestions,
-            passingScore: quiz.passingScore,
-            isActive: quiz.isActive,
-            isAiGenerated: quiz.isAiGenerated,
-            aiGenerationPrompt: quiz.aiGenerationPrompt,
+          const quizQuestions: QuizQuestionDto[] = quiz.questions.map((q, index) => ({
+            id: '',
+            quizId: '',
+            questionType: q.questionType,
+            questionText: q.questionText,
+            options: q.questionType === 'TRUE_FALSE' 
+              ? { A: 'True', B: 'False' } 
+              : q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation || '',
+            difficultyLevel: SkillLevel.BEGINNER,
+            points: q.points || 1,
+            orderIndex: index,
+            isAiGenerated: false,
+            aiGenerationMetadata: {},
+            createdAt: new Date().toISOString(),
+          }));
+
+          await createFullQuiz(savedTopicId, {
+            quizDto: {
+              id: '',
+              topicId: savedTopicId,
+              instructorId: '',
+              title: quiz.title,
+              description: quiz.description || '',
+              quizType: QuizType.PRACTICE,
+              difficultyLevel: SkillLevel.BEGINNER,
+              timeLimitMinutes: 30,
+              totalQuestions: quiz.totalQuestions || quiz.questions.length,
+              passingScore: quiz.passingScore || 70,
+              isActive: true,
+              isAiGenerated: false,
+              aiGenerationPrompt: '',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            quizQuestions: quizQuestions,
           });
         }
 
@@ -251,7 +275,7 @@ export default function CreateCourse() {
   const addQuiz = (topicId: string) => {
     setTopics(topics.map(topic => {
       if (topic.id === topicId) {
-        const newQuiz: QuizDto = {
+        const newQuiz: QuizWithQuestions = {
           id: Date.now().toString(),
           topicId,
           instructorId: '',
@@ -260,13 +284,14 @@ export default function CreateCourse() {
           quizType: QuizType.PRACTICE,
           difficultyLevel: SkillLevel.BEGINNER,
           timeLimitMinutes: 30,
-          totalQuestions: 10,
+          totalQuestions: 0,
           passingScore: 70,
           isActive: true,
           isAiGenerated: false,
           aiGenerationPrompt: '',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          questions: [],
         };
         return { ...topic, quizzes: [...topic.quizzes, newQuiz] };
       }
@@ -274,7 +299,7 @@ export default function CreateCourse() {
     }));
   };
 
-  const updateQuiz = (topicId: string, quizId: string, updates: Partial<QuizDto>) => {
+  const updateQuiz = (topicId: string, quizId: string, updates: Partial<QuizWithQuestions>) => {
     setTopics(topics.map(topic => {
       if (topic.id === topicId) {
         return {
@@ -294,6 +319,80 @@ export default function CreateCourse() {
         return {
           ...topic,
           quizzes: topic.quizzes.filter(quiz => quiz.id !== quizId),
+        };
+      }
+      return topic;
+    }));
+  };
+
+  const addQuizQuestion = (topicId: string, quizId: string) => {
+    setTopics(topics.map(topic => {
+      if (topic.id === topicId) {
+        return {
+          ...topic,
+          quizzes: topic.quizzes.map(quiz => {
+            if (quiz.id === quizId) {
+              const newQuestion: QuizQuestionDto = {
+                id: Date.now().toString(),
+                quizId,
+                questionType: 'MCQ',
+                questionText: '',
+                options: { A: '', B: '' },
+                correctAnswer: '',
+                explanation: '',
+                difficultyLevel: SkillLevel.BEGINNER,
+                points: 1,
+                orderIndex: quiz.questions.length,
+                isAiGenerated: false,
+                aiGenerationMetadata: {},
+                createdAt: new Date().toISOString(),
+              };
+              return { ...quiz, questions: [...quiz.questions, newQuestion] };
+            }
+            return quiz;
+          }),
+        };
+      }
+      return topic;
+    }));
+  };
+
+  const updateQuizQuestion = (topicId: string, quizId: string, questionId: string, updates: Partial<QuizQuestionDto>) => {
+    setTopics(topics.map(topic => {
+      if (topic.id === topicId) {
+        return {
+          ...topic,
+          quizzes: topic.quizzes.map(quiz => {
+            if (quiz.id === quizId) {
+              return {
+                ...quiz,
+                questions: quiz.questions.map(q =>
+                  q.id === questionId ? { ...q, ...updates } : q
+                ),
+              };
+            }
+            return quiz;
+          }),
+        };
+      }
+      return topic;
+    }));
+  };
+
+  const deleteQuizQuestion = (topicId: string, quizId: string, questionId: string) => {
+    setTopics(topics.map(topic => {
+      if (topic.id === topicId) {
+        return {
+          ...topic,
+          quizzes: topic.quizzes.map(quiz => {
+            if (quiz.id === quizId) {
+              return {
+                ...quiz,
+                questions: quiz.questions.filter(q => q.id !== questionId),
+              };
+            }
+            return quiz;
+          }),
         };
       }
       return topic;
@@ -353,6 +452,9 @@ export default function CreateCourse() {
                       onDeleteMaterial={(materialId) => deleteMaterial(topic.id, materialId)}
                       onUpdateQuiz={(quizId, updates) => updateQuiz(topic.id, quizId, updates)}
                       onDeleteQuiz={(quizId) => deleteQuiz(topic.id, quizId)}
+                      onAddQuizQuestion={(quizId) => addQuizQuestion(topic.id, quizId)}
+                      onUpdateQuizQuestion={(quizId, questionId, updates) => updateQuizQuestion(topic.id, quizId, questionId, updates)}
+                      onDeleteQuizQuestion={(quizId, questionId) => deleteQuizQuestion(topic.id, quizId, questionId)}
                     />
                     <div className="flex justify-end">
                       <Button
