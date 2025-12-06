@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Video, FileText, Link as LinkIcon, HelpCircle, Clock, Play, CheckCircle2 } from 'lucide-react';
-// import { dummyCourseContent } from '@/data/dummyCourseContent';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Video, FileText, Link as LinkIcon, HelpCircle, Clock, Play, CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import {  CourseStructure, LearningMaterial, LearningMaterialDto, QuizDto } from '@/services/types';
+import { CourseStructure, LearningMaterial, LearningMaterialDto, QuizDto, FullQuizDto, QuizQuestionDto } from '@/services/types';
 import { getCourseById, markLearningMaterialCompleted } from '@/services/api/course';
 import { getStudentCompletedLearningMaterialForCourse } from '@/services/api/student';
+import { getQuizById } from '@/services/api/quiz';
 
 type ContentItem = (LearningMaterialDto | QuizDto) & { type: 'material' | 'quiz' };
 
@@ -20,7 +22,15 @@ export default function CourseLearn() {
   const navigate = useNavigate();
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
-  const [course,setCourse] = useState<CourseStructure | null>(null);
+  const [course, setCourse] = useState<CourseStructure | null>(null);
+  
+  // Quiz state
+  const [activeQuiz, setActiveQuiz] = useState<FullQuizDto | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
   
   // const [completedLearningMaterials, setCompletedLearningMaterials] = useState<Set<string>>(new Set());
   
@@ -86,6 +96,40 @@ export default function CourseLearn() {
     }
   };
 
+  const handleTakeQuiz = async (quizId: string) => {
+    setQuizLoading(true);
+    try {
+      const res = await getQuizById(quizId);
+      if (res.result && res.object) {
+        setActiveQuiz(res.object);
+        setQuizStarted(true);
+        setCurrentQuestionIndex(0);
+        setSelectedAnswers({});
+        setQuizSubmitted(false);
+      } else {
+        toast.error('Failed to load quiz');
+      }
+    } catch (error) {
+      toast.error('Error loading quiz');
+      console.error(error);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  const handleSubmitQuiz = () => {
+    setQuizSubmitted(true);
+    toast.success('Quiz submitted!');
+  };
+
+  const handleResetQuiz = () => {
+    setQuizStarted(false);
+    setActiveQuiz(null);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setQuizSubmitted(false);
+  };
+
   const renderMainContent = () => {
     if (!selectedContent) {
       return (
@@ -103,43 +147,204 @@ export default function CourseLearn() {
 
     if (selectedContent.type === 'quiz') {
       const quiz = selectedContent as QuizDto;
+      
+      // Show loading state while fetching quiz
+      if (quizLoading) {
+        return (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center space-y-4">
+              <Loader2 className="w-12 h-12 mx-auto animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading quiz...</p>
+            </div>
+          </div>
+        );
+      }
+
+      // Quiz not started yet - show "Take Quiz" view
+      if (!quizStarted || !activeQuiz) {
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">{quiz.title}</h2>
+                <p className="text-muted-foreground mt-2">{quiz.description}</p>
+              </div>
+              <Badge variant="secondary">{quiz.quizType}</Badge>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Quiz Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Time Limit</p>
+                    <p className="text-lg font-semibold">{quiz.timeLimitMinutes} minutes</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Questions</p>
+                    <p className="text-lg font-semibold">{quiz.totalQuestions}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Passing Score</p>
+                    <p className="text-lg font-semibold">{quiz.passingScore}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Difficulty</p>
+                    <Badge>{quiz.difficultyLevel}</Badge>
+                  </div>
+                </div>
+                <Separator />
+                <Button size="lg" className="w-full" onClick={() => handleTakeQuiz(quiz.id)}>
+                  Take Quiz
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      }
+
+      // Quiz submitted - show results
+      if (quizSubmitted && activeQuiz) {
+        const questions = activeQuiz.quizQuestions || [];
+        let correctCount = 0;
+        questions.forEach((q) => {
+          if (q.id && selectedAnswers[q.id] === q.correctAnswer) {
+            correctCount++;
+          }
+        });
+        const score = questions.length > 0 ? (correctCount / questions.length) * 100 : 0;
+        const passed = score >= (activeQuiz.quizDto?.passingScore || 70);
+
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-2">Quiz Completed!</h2>
+              <p className="text-muted-foreground">{activeQuiz.quizDto?.title}</p>
+            </div>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <div className={`text-6xl font-bold ${passed ? 'text-green-500' : 'text-destructive'}`}>
+                    {score.toFixed(0)}%
+                  </div>
+                  <Badge variant={passed ? 'default' : 'destructive'} className="text-lg px-4 py-1">
+                    {passed ? 'Passed' : 'Failed'}
+                  </Badge>
+                  <p className="text-muted-foreground">
+                    You got {correctCount} out of {questions.length} questions correct
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Passing score: {activeQuiz.quizDto?.passingScore}%
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Review Answers</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {questions.map((q, index) => {
+                  const isCorrect = q.id && selectedAnswers[q.id] === q.correctAnswer;
+                  return (
+                    <div key={q.id} className={`p-4 rounded-lg border ${isCorrect ? 'border-green-500 bg-green-500/10' : 'border-destructive bg-destructive/10'}`}>
+                      <p className="font-medium mb-2">
+                        {index + 1}. {q.questionText}
+                      </p>
+                      <p className="text-sm">
+                        Your answer: <span className={isCorrect ? 'text-green-500' : 'text-destructive'}>{q.id && selectedAnswers[q.id]}</span>
+                      </p>
+                      {!isCorrect && (
+                        <p className="text-sm text-green-500">Correct answer: {q.correctAnswer}</p>
+                      )}
+                      {q.explanation && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                          <strong>Explanation:</strong> {q.explanation}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            <Button className="w-full" onClick={handleResetQuiz}>
+              Retake Quiz
+            </Button>
+          </div>
+        );
+      }
+
+      // Quiz in progress - show questions
+      const questions = activeQuiz?.quizQuestions || [];
+      const currentQuestion = questions[currentQuestionIndex];
+
+      if (!currentQuestion) {
+        return <p>No questions available.</p>;
+      }
+
       return (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold">{quiz.title}</h2>
-              <p className="text-muted-foreground mt-2">{quiz.description}</p>
+              <h2 className="text-2xl font-bold">{activeQuiz?.quizDto?.title}</h2>
+              <p className="text-muted-foreground">
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </p>
             </div>
-            <Badge variant="secondary">{quiz.quizType}</Badge>
+            <Badge variant="outline">{currentQuestion.points} pts</Badge>
           </div>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Quiz Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Time Limit</p>
-                  <p className="text-lg font-semibold">{quiz.timeLimitMinutes} minutes</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Questions</p>
-                  <p className="text-lg font-semibold">{quiz.totalQuestions}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Passing Score</p>
-                  <p className="text-lg font-semibold">{quiz.passingScore}%</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Difficulty</p>
-                  <Badge>{quiz.difficultyLevel}</Badge>
-                </div>
-              </div>
-              <Separator />
-              <Button size="lg" className="w-full">Start Quiz</Button>
+            <CardContent className="pt-6 space-y-6">
+              <p className="text-lg font-medium">{currentQuestion.questionText}</p>
+
+              <RadioGroup
+                value={currentQuestion.id ? selectedAnswers[currentQuestion.id] || '' : ''}
+                onValueChange={(value) => {
+                  if (currentQuestion.id) {
+                    setSelectedAnswers(prev => ({ ...prev, [currentQuestion.id!]: value }));
+                  }
+                }}
+              >
+                {currentQuestion.options && Object.entries(currentQuestion.options).map(([key, value]) => (
+                  <div key={key} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent transition-colors">
+                    <RadioGroupItem value={key} id={key} />
+                    <Label htmlFor={key} className="flex-1 cursor-pointer">
+                      <span className="font-medium mr-2">{key}.</span>
+                      {value}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </CardContent>
           </Card>
+
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+              disabled={currentQuestionIndex === 0}
+            >
+              Previous
+            </Button>
+            {currentQuestionIndex === questions.length - 1 ? (
+              <Button onClick={handleSubmitQuiz}>
+                Submit Quiz
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                disabled={!currentQuestion.id || !selectedAnswers[currentQuestion.id]}
+              >
+                Next
+              </Button>
+            )}
+          </div>
         </div>
       );
     }
