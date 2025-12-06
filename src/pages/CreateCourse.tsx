@@ -158,7 +158,6 @@ export default function CreateCourse() {
         // Save all quizzes with questions using createFullQuiz
         for (const quiz of topic.quizzes) {
           const quizQuestions: QuizQuestionDto[] = quiz.questions.map((q, index) => ({
-            id: '',
             quizId: '',
             questionType: q.questionType,
             questionText: q.questionText,
@@ -177,7 +176,6 @@ export default function CreateCourse() {
 
           await createFullQuiz(savedTopicId, {
             quizDto: {
-              id: '',
               topicId: savedTopicId,
               instructorId: '',
               title: quiz.title,

@@ -13,7 +13,7 @@ export const createQuiz = async (
 };
 export const createFullQuiz = async (
   topicId: string,
-  quizData: FullQuizDto
+  quizData: Partial<FullQuizDto>
 ): Promise<ApiResponseObject<QuizDto>> => {
   const instructorId = localStorage.getItem('instructor_id');
   const response = await apiClient.post<ApiResponseObject<QuizDto>>(
@@ -22,6 +22,16 @@ export const createFullQuiz = async (
   );
   return response.data;
 };
+
+export const getQuizById = async (
+  quizId: string
+): Promise<ApiResponseObject<FullQuizDto>> => {
+  const response = await apiClient.get<ApiResponseObject<FullQuizDto>>(
+    `/quiz/get/${quizId}`
+  );
+  return response.data;
+};
+
 
 export const getAllQuizzesForTopic = async (
   topicId: string

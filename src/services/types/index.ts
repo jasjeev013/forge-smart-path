@@ -171,8 +171,8 @@ export interface QuizQuestionDto {
 type QuestionType = "MCQ" | "TRUE_FALSE" ;
 
 export interface FullQuizDto{
-  quizDto: QuizDto;
-  quizQuestions: QuizQuestionDto[];
+  quizDto: Partial<QuizDto>;
+  quizQuestions: Partial<QuizQuestionDto>[];
 }
 
 interface Course {
