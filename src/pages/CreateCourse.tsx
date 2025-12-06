@@ -16,7 +16,7 @@ import {
   MaterialType,
   QuizType 
 } from '@/services/types';
-import { createCourse } from '@/services/api/course';
+import { addThumbnailURL, createCourse } from '@/services/api/course';
 import { createTopic } from '@/services/api/topic';
 import { createLearningMaterial } from '@/services/api/learningMaterial';
 import { createQuiz } from '@/services/api/quiz';
@@ -42,6 +42,7 @@ export default function CreateCourse() {
   const [topics, setTopics] = useState<TopicWithContent[]>([]);
   const [isSavingCourse, setIsSavingCourse] = useState(false);
   const [isSavingTopic, setIsSavingTopic] = useState<string | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   const handleSaveCourse = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +55,7 @@ export default function CreateCourse() {
     setIsSavingCourse(true);
     try {
       // Get instructorId from localStorage or user context
-      const userId = localStorage.getItem('userId');
+      const userId = localStorage.getItem('instructor_id');
       if (!userId) {
         toast.error('User not found. Please login again.');
         return;
@@ -65,6 +66,17 @@ export default function CreateCourse() {
       if (response.result) {
         setSavedCourseId(response.object.id);
         toast.success('Course saved successfully! Now you can add topics.');
+
+        if (thumbnailFile) {
+          const formData = new FormData();
+          formData.append('file', thumbnailFile);
+          const res = await addThumbnailURL(response.object.id, formData);
+          if (res.result) {
+            toast.success('Thumbnail uploaded successfully!');
+          } else {
+            toast.error('Failed to upload thumbnail');
+          }
+        }
       } else {
         toast.error(response.message || 'Failed to save course');
       }
@@ -300,7 +312,7 @@ export default function CreateCourse() {
           </div>
 
           <form onSubmit={handleSaveCourse} className="space-y-6">
-            <CourseBasicInfo courseData={courseData} onChange={(updates) => setCourseData({ ...courseData, ...updates })} />
+            <CourseBasicInfo courseData={courseData} onChange={(updates) => setCourseData({ ...courseData, ...updates })} thumbnailFile={thumbnailFile} setThumbnailFile={setThumbnailFile} />
 
             <div className="flex justify-end">
               <Button 

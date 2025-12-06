@@ -185,7 +185,7 @@ interface Topic {
   updatedAt: string;
 }
 
-interface LearningMaterial {
+export interface LearningMaterial {
   id: string;
   topicId: string;
   title: string;

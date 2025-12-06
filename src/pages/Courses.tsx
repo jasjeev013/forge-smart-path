@@ -9,19 +9,20 @@ import Navbar from '@/components/Navbar';
 // import { dummyCourses } from '@/data/dummyCourses';
 import { SkillLevel } from '@/services/types';
 import { toast } from 'sonner';
-import {getAllCourses,enrollCourse, getAllEnrolledCourses} from '@/services/api/course'
+import {getAllCourses,enrollCourse, getAllEnrolledCourses, getAllPublishedCourses} from '@/services/api/course'
 
 export default function Courses() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [courses,setCourses] = useState([]);
+  const [isStudent, setIsStudent] = useState(false);
 
   const [enrolledCourses,setEnrolledCourses] = useState([]);
 
   useEffect(()=>{
     async function getCourses(){
-      const res = await getAllCourses();
+      const res = await getAllPublishedCourses();
       // console.log(res.object);
       setCourses(res.object);
     }
@@ -36,6 +37,14 @@ export default function Courses() {
     }
     if(localStorage.getItem('student_id')){
       getEnrolledCourses();
+    }
+  },[])
+  useEffect(()=>{
+    const role = localStorage.getItem('student_id');
+    if( role) {
+      setIsStudent(true);
+    }else{
+      setIsStudent(false);
     }
   },[])
 
@@ -210,6 +219,7 @@ export default function Courses() {
                         e.stopPropagation();
                         handleEnroll(course.id);
                       }}
+                      disabled= {!isStudent}
                     >
                       <GraduationCap className="w-4 h-4 mr-2" />
                       {enrolledCourses.some((enrolled: any) => enrolled.courseId === course.id) ? 'Continue Learning' : 'Enroll Now'}

@@ -1,330 +1,336 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import {
-  ArrowLeft,
-  Video,
-  FileText,
-  Link as LinkIcon,
-  HelpCircle,
-  CheckCircle,
-  PlayCircle,
-  BookOpen,
-  Clock,
-  Menu,
-  X,
-} from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import { dummyCourseContent } from '@/data/dummyCourseContent';
-import { MaterialType } from '@/services/types';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, Video, FileText, Link as LinkIcon, HelpCircle, Clock, Play, CheckCircle2 } from 'lucide-react';
+// import { dummyCourseContent } from '@/data/dummyCourseContent';
+import { toast } from 'sonner';
+import {  CourseStructure, LearningMaterial, LearningMaterialDto, QuizDto } from '@/services/types';
+import { getCourseById, markLearningMaterialCompleted } from '@/services/api/course';
+import { getStudentCompletedLearningMaterialForCourse } from '@/services/api/student';
 
-type ContentItem = {
-  type: 'material' | 'quiz';
-  data: typeof dummyCourseContent.fullTopic[0]['learningMaterial'][0] | typeof dummyCourseContent.fullTopic[0]['quizzes'][0];
-};
-
-const getContentIcon = (contentType: MaterialType | string) => {
-  switch (contentType) {
-    case MaterialType.VIDEO:
-    case 'VIDEO':
-      return <Video className="w-4 h-4" />;
-    case MaterialType.DOCUMENT:
-    case 'PDF':
-    case MaterialType.TEXT:
-    case 'TEXT':
-      return <FileText className="w-4 h-4" />;
-    case MaterialType.LINK:
-    case 'LINK':
-      return <LinkIcon className="w-4 h-4" />;
-    default:
-      return <BookOpen className="w-4 h-4" />;
-  }
-};
+type ContentItem = (LearningMaterialDto | QuizDto) & { type: 'material' | 'quiz' };
 
 export default function CourseLearn() {
-  const { courseId } = useParams();
+  const { courseId,enrollmentId } = useParams();
   const navigate = useNavigate();
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [course,setCourse] = useState<CourseStructure | null>(null);
+  
+  // const [completedLearningMaterials, setCompletedLearningMaterials] = useState<Set<string>>(new Set());
+  
 
-  const courseData = dummyCourseContent;
-  const totalItems = courseData.fullTopic.reduce(
-    (acc, topic) => acc + topic.learningMaterial.length + (topic.quizzes?.length || 0),
-    0
-  );
-  const progressPercent = totalItems > 0 ? (completedItems.size / totalItems) * 100 : 0;
 
-  const handleSelectMaterial = (material: typeof courseData.fullTopic[0]['learningMaterial'][0]) => {
-    setSelectedContent({ type: 'material', data: material });
-  };
+  useEffect(() => {
+    async function fetchCourse() {
+      // In a real app, fetch course details by courseId.
+      const course = await getCourseById(courseId);
+      console.log('Fetched course:', course);
+      setCourse(course.object);
+    }
+    fetchCourse();
+    // console.log(enrollmentId)
+  }, [courseId]);
 
-  const handleSelectQuiz = (quiz: typeof courseData.fullTopic[0]['quizzes'][0]) => {
-    setSelectedContent({ type: 'quiz', data: quiz });
-  };
+  useEffect(() => {
+    async function fetchCompletedLearningMaterials() {
+      const res = await getStudentCompletedLearningMaterialForCourse(enrollmentId);
+      console.log('Fetched completed learning materials:', res);
+      setCompletedItems(new Set(res.object));
+    }
+    fetchCompletedLearningMaterials();
+  }, [courseId]);
 
-  const handleMarkComplete = () => {
-    if (selectedContent) {
-      const newCompleted = new Set(completedItems);
-      newCompleted.add(selectedContent.data.id);
-      setCompletedItems(newCompleted);
+  if (!course) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading course...</p>
+      </div>
+    );
+  }
+
+  // For demo purposes, we use dummy data. In a real app, fetch course content by courseId.
+  // const courseData = dummyCourseContent;
+
+  const getContentIcon = (contentType: string) => {
+    switch (contentType) {
+      case 'VIDEO': return <Video className="w-4 h-4" />;
+      case 'TEXT': return <FileText className="w-4 h-4" />;
+      case 'PDF': return <FileText className="w-4 h-4" />;
+      case 'LINK': return <LinkIcon className="w-4 h-4" />;
+      default: return <FileText className="w-4 h-4" />;
     }
   };
 
-  const renderContentViewer = () => {
+  const handleItemClick = (item: LearningMaterial | any, type: 'material' | 'quiz') => {
+    setSelectedContent({ ...item, type });
+  };
+
+  const handleMarkComplete = async () => {
+    if (selectedContent) {
+
+      const res = await markLearningMaterialCompleted(enrollmentId,selectedContent.id,courseId);
+      if(res.result){
+        toast.success('Marked as complete!');
+        console.log('Marked as complete:', selectedContent.id);
+        setCompletedItems(prev => new Set([...prev, selectedContent.id]));
+      }else{
+        toast.error('Failed to mark as complete.');
+        return;
+      }
+    }
+  };
+
+  const renderMainContent = () => {
     if (!selectedContent) {
       return (
-        <div className="flex flex-col items-center justify-center h-full text-center p-8">
-          <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">Welcome to {courseData.course.title}</h2>
-          <p className="text-muted-foreground max-w-md">
-            Select a lesson from the sidebar to start learning. Track your progress as you complete each section.
-          </p>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <Play className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold">Select a lesson to start learning</h3>
+            <p className="text-muted-foreground">Choose from the course content on the left</p>
+          </div>
         </div>
       );
     }
 
     if (selectedContent.type === 'quiz') {
-      const quiz = selectedContent.data as typeof courseData.fullTopic[0]['quizzes'][0];
+      const quiz = selectedContent as QuizDto;
       return (
-        <div className="p-8 space-y-6">
-          <div className="flex items-center gap-2">
-            <HelpCircle className="w-6 h-6 text-primary" />
-            <Badge variant="secondary">Quiz</Badge>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold">{quiz.title}</h2>
+              <p className="text-muted-foreground mt-2">{quiz.description}</p>
+            </div>
+            <Badge variant="secondary">{quiz.quizType}</Badge>
           </div>
-          <h1 className="text-3xl font-bold">{quiz.title}</h1>
-          <p className="text-muted-foreground">{quiz.description}</p>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              {quiz.timeLimitMinutes} minutes
-            </span>
-            <span>{quiz.totalQuestions} questions</span>
-            <span>Passing score: {quiz.passingScore}%</span>
-          </div>
-          <Button size="lg" className="mt-4">
-            Start Quiz
-          </Button>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Quiz Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Time Limit</p>
+                  <p className="text-lg font-semibold">{quiz.timeLimitMinutes} minutes</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Questions</p>
+                  <p className="text-lg font-semibold">{quiz.totalQuestions}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Passing Score</p>
+                  <p className="text-lg font-semibold">{quiz.passingScore}%</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Difficulty</p>
+                  <Badge>{quiz.difficultyLevel}</Badge>
+                </div>
+              </div>
+              <Separator />
+              <Button size="lg" className="w-full">Start Quiz</Button>
+            </CardContent>
+          </Card>
         </div>
       );
     }
 
-    const material = selectedContent.data as typeof courseData.fullTopic[0]['learningMaterial'][0];
-    const contentType = material.contentType;
-
+    const material = selectedContent as LearningMaterialDto;
     return (
-      <div className="p-8 space-y-6">
-        <div className="flex items-center gap-2">
-          {getContentIcon(contentType)}
-          <Badge variant="secondary">{contentType}</Badge>
-          {material.durationMinutes && (
-            <span className="text-sm text-muted-foreground flex items-center gap-1">
+      <div className="space-y-6">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              {getContentIcon(material.contentType)}
+              <Badge variant="outline">{material.contentType}</Badge>
+              <Badge variant="secondary">{material.difficultyLevel}</Badge>
+            </div>
+            <h2 className="text-3xl font-bold">{material.title}</h2>
+            <p className="text-muted-foreground mt-2">{material.description}</p>
+            <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
               <Clock className="w-4 h-4" />
-              {material.durationMinutes} min
-            </span>
-          )}
-        </div>
-        <h1 className="text-3xl font-bold">{material.title}</h1>
-        <p className="text-muted-foreground">{material.description}</p>
-
-        {/* Content Display */}
-        <div className="mt-8">
-          {contentType === MaterialType.VIDEO && (
-            <div className="aspect-video bg-secondary rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <PlayCircle className="w-16 h-16 text-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">Video Player</p>
-                <p className="text-sm text-muted-foreground mt-2">{material.contentUrl}</p>
-              </div>
+              <span>{material.durationMinutes} minutes</span>
             </div>
+          </div>
+          {!completedItems.has(material.id) && (
+            <Button onClick={handleMarkComplete} variant="outline">
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              Mark Complete
+            </Button>
           )}
-
-          {contentType === MaterialType.TEXT && (
-            <div className="prose prose-invert max-w-none">
-              <div className="bg-secondary/50 rounded-lg p-6">
-                {material.contentText || 'No content available.'}
-              </div>
-            </div>
-          )}
-
-          {contentType === MaterialType.DOCUMENT && (
-            <div className="bg-secondary rounded-lg p-8 text-center">
-              <FileText className="w-16 h-16 text-primary mx-auto mb-4" />
-              <p className="text-lg font-medium mb-2">PDF Document</p>
-              <Button variant="outline" asChild>
-                <a href={material.contentUrl} target="_blank" rel="noopener noreferrer">
-                  Open PDF
-                </a>
-              </Button>
-            </div>
-          )}
-
-          {contentType === MaterialType.LINK && (
-            <div className="bg-secondary rounded-lg p-8 text-center">
-              <LinkIcon className="w-16 h-16 text-primary mx-auto mb-4" />
-              <p className="text-lg font-medium mb-2">External Resource</p>
-              <Button variant="outline" asChild>
-                <a href={material.contentUrl} target="_blank" rel="noopener noreferrer">
-                  Open Link
-                </a>
-              </Button>
-            </div>
+          {completedItems.has(material.id) && (
+            <Badge variant="default" className="bg-green-500">
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              Completed
+            </Badge>
           )}
         </div>
 
-        {/* Mark Complete Button */}
-        <div className="flex justify-end pt-4 border-t">
-          <Button
-            onClick={handleMarkComplete}
-            disabled={completedItems.has(material.id)}
-            className={completedItems.has(material.id) ? 'bg-green-600' : ''}
-          >
-            {completedItems.has(material.id) ? (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Completed
-              </>
-            ) : (
-              'Mark as Complete'
+        <Card>
+          <CardContent className="pt-6">
+            {material.contentType === 'VIDEO' && (
+              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <div className="text-center space-y-2">
+                  <Video className="w-16 h-16 mx-auto text-muted-foreground" />
+                  <p className="text-muted-foreground">Video Player</p>
+                  <p className="text-sm text-muted-foreground">{material.contentUrl}</p>
+                </div>
+              </div>
             )}
-          </Button>
-        </div>
+            
+            {material.contentType === 'TEXT' && (
+              <div className="prose prose-lg max-w-none">
+                <p>{material.contentText}</p>
+              </div>
+            )}
+            
+            {material.contentType === 'PDF' && (
+              <div className="space-y-4">
+                <div className="aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
+                  <div className="text-center space-y-2">
+                    <FileText className="w-16 h-16 mx-auto text-muted-foreground" />
+                    <p className="text-muted-foreground">Document Viewer</p>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full" asChild>
+                  <a href={material.contentUrl} target="_blank" rel="noopener noreferrer">
+                    Open Document
+                  </a>
+                </Button>
+              </div>
+            )}
+            
+            {material.contentType === 'LINK' && (
+              <div className="space-y-4">
+                <div className="p-6 bg-muted rounded-lg">
+                  <LinkIcon className="w-8 h-8 mb-4 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-4">{material.contentText}</p>
+                  <Button asChild>
+                    <a href={material.contentUrl} target="_blank" rel="noopener noreferrer">
+                      Visit External Resource
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {material.tags && material.tags.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Tags</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {material.tags.map((tag, index) => (
+                  <Badge key={index} variant="secondary">{tag}</Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
-      <div className="pt-16 flex h-[calc(100vh-64px)]">
-        {/* Sidebar Toggle for Mobile */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed top-20 left-4 z-50 lg:hidden"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </Button>
-
-        {/* Sidebar */}
-        <div
-          className={`${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } fixed lg:relative lg:translate-x-0 z-40 w-80 h-full bg-card border-r transition-transform duration-300`}
-        >
-          <div className="p-4 border-b">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Courses
-            </Button>
-            <h2 className="font-semibold text-lg line-clamp-2">{courseData.course.title}</h2>
-            <div className="mt-3 space-y-2">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Progress</span>
-                <span>{Math.round(progressPercent)}%</span>
-              </div>
-              <Progress value={progressPercent} className="h-2" />
-            </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="container flex items-center gap-4 h-16">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/courses')}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="font-semibold">{course.course.title}</h1>
           </div>
+        </div>
+      </header>
 
-          <ScrollArea className="h-[calc(100%-140px)]">
-            <Accordion type="multiple" defaultValue={courseData.fullTopic.map(t => t.topic.id)} className="px-2">
-              {courseData.fullTopic.map((fullTopic, topicIndex) => (
-                <AccordionItem key={fullTopic.topic.id} value={fullTopic.topic.id}>
-                  <AccordionTrigger className="hover:no-underline px-2">
-                    <div className="flex items-center gap-2 text-left">
-                      <span className="text-xs text-muted-foreground w-6">
-                        {topicIndex + 1}.
-                      </span>
-                      <span className="text-sm font-medium">{fullTopic.topic.title}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-1 pl-8">
-                      {fullTopic.learningMaterial.map((material) => {
-                        const isCompleted = completedItems.has(material.id);
-                        const isSelected =
-                          selectedContent?.type === 'material' &&
-                          selectedContent.data.id === material.id;
-                        
-                        return (
+      <div className="flex-1 flex">
+        {/* Sidebar */}
+        <aside className="w-80 border-r bg-background">
+          <ScrollArea className="h-[calc(100vh-4rem)]">
+            <div className="p-4">
+              <h2 className="font-semibold mb-4">Course Content</h2>
+              <Accordion type="multiple" defaultValue={course.fullTopics.map(t => t.topic.id)}>
+                {course.fullTopics.map((topicData) => (
+                  <AccordionItem key={topicData.topic.id} value={topicData.topic.id}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex-1 text-left">
+                        <p className="font-medium">{topicData.topic.title}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {topicData.learningMaterial.length} materials • {topicData.quizzes?.length || 0} quizzes
+                        </p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-1 pl-4">
+                        {topicData.learningMaterial.map((material) => (
                           <button
                             key={material.id}
-                            onClick={() => handleSelectMaterial(material)}
-                            className={`w-full flex items-center gap-2 p-2 rounded-md text-left text-sm transition-colors ${
-                              isSelected
-                                ? 'bg-primary/20 text-primary'
-                                : 'hover:bg-secondary'
+                            onClick={() => handleItemClick(material, 'material')}
+                            className={`w-full text-left p-2 rounded-md hover:bg-accent transition-colors ${
+                              selectedContent?.id === material.id ? 'bg-accent' : ''
                             }`}
                           >
-                            {isCompleted ? (
-                              <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
-                            ) : (
-                              getContentIcon(material.contentType)
-                            )}
-                            <span className="line-clamp-1">{material.title}</span>
+                            <div className="flex items-center gap-2">
+                              {completedItems.has(material.id) ? (
+                                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              ) : (
+                                getContentIcon(material.contentType)
+                              )}
+                              <span className="text-sm flex-1">{material.title}</span>
+                              <span className="text-xs text-muted-foreground flex-shrink-0">
+                                {material.durationMinutes}m
+                              </span>
+                            </div>
                           </button>
-                        );
-                      })}
-                      
-                      {fullTopic.quizzes?.map((quiz) => {
-                        const isCompleted = completedItems.has(quiz.id);
-                        const isSelected =
-                          selectedContent?.type === 'quiz' &&
-                          selectedContent.data.id === quiz.id;
-                        
-                        return (
+                        ))}
+                        {topicData.quizzes?.map((quiz) => (
                           <button
                             key={quiz.id}
-                            onClick={() => handleSelectQuiz(quiz)}
-                            className={`w-full flex items-center gap-2 p-2 rounded-md text-left text-sm transition-colors ${
-                              isSelected
-                                ? 'bg-primary/20 text-primary'
-                                : 'hover:bg-secondary'
+                            onClick={() => handleItemClick(quiz, 'quiz')}
+                            className={`w-full text-left p-2 rounded-md hover:bg-accent transition-colors ${
+                              selectedContent?.id === quiz.id ? 'bg-accent' : ''
                             }`}
                           >
-                            {isCompleted ? (
-                              <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
-                            ) : (
-                              <HelpCircle className="w-4 h-4 shrink-0" />
-                            )}
-                            <span className="line-clamp-1">{quiz.title}</span>
-                            <Badge variant="outline" className="ml-auto text-xs">
-                              Quiz
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              {completedItems.has(quiz.id) ? (
+                                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              ) : (
+                                <HelpCircle className="w-4 h-4 flex-shrink-0" />
+                              )}
+                              <span className="text-sm flex-1">{quiz.title}</span>
+                              <Badge variant="outline" className="text-xs">Quiz</Badge>
+                            </div>
                           </button>
-                        );
-                      })}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
           </ScrollArea>
-        </div>
+        </aside>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
-          <ScrollArea className="h-full">
-            {renderContentViewer()}
-          </ScrollArea>
-        </div>
+        <main className="flex-1 overflow-auto">
+          <div className="container max-w-4xl py-8">
+            {renderMainContent()}
+          </div>
+        </main>
       </div>
     </div>
   );

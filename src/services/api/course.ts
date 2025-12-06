@@ -19,10 +19,29 @@ export const getAllCourses = async (): Promise<ApiResponseObject<CourseDto[]>> =
   const response = await apiClient.get<ApiResponseObject<CourseDto[]>>('/course/all');
   return response.data;
 };
+export const getAllPublishedCourses = async (): Promise<ApiResponseObject<CourseDto[]>> => {
+  const response = await apiClient.get<ApiResponseObject<CourseDto[]>>('/course/all/published');
+  return response.data;
+};
+export const getDraftCoursesForinstructor = async (): Promise<ApiResponseObject<CourseDto[]>> => {
+  const instructorId = localStorage.getItem('instructor_id')
+  const response = await apiClient.get<ApiResponseObject<CourseDto[]>>(`/course/all/draft/${instructorId}`);
+  return response.data;
+};
+export const getPublishedCoursesForinstructor = async (): Promise<ApiResponseObject<CourseDto[]>> => {
+  const instructorId = localStorage.getItem('instructor_id')
+  const response = await apiClient.get<ApiResponseObject<CourseDto[]>>(`/course/all/published/${instructorId}`);
+  return response.data;
+};
 
 export const enrollCourse = async (courseId:string): Promise<ApiResponseObject<StudentEnrollmentDto>> => {
   const studentId = localStorage.getItem('student_id')
   const response = await apiClient.post<ApiResponseObject<StudentEnrollmentDto>>(`enroll/create/${studentId}/${courseId}`);
+  return response.data;
+};
+
+export const addThumbnailURL = async (courseId:string,formData: FormData): Promise<ApiResponseObject<String>> => {
+  const response = await apiClient.post<ApiResponseObject<String>>(`course/setThumbnail/${courseId}`, formData);
   return response.data;
 };
 
@@ -58,5 +77,10 @@ export const markLearningMaterialCompleted = async (enrollId: string, materialId
     timeSpentMinutes: 5
   }
   );
+  return response.data;
+};
+
+export const getCoursePublished = async (courseId:string): Promise<ApiResponseObject<null>> => {
+  const response = await apiClient.post<ApiResponseObject<null>>(`course/publish/${courseId}`);
   return response.data;
 };
