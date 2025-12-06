@@ -157,7 +157,7 @@ export default function CreateCourse() {
 
         // Save all quizzes with questions using createFullQuiz
         for (const quiz of topic.quizzes) {
-          const quizQuestions: QuizQuestionDto[] = quiz.questions.map((q, index) => ({
+          const quizQuestions: Partial<QuizQuestionDto>[] = quiz.questions.map((q, index) => ({
             quizId: '',
             questionType: q.questionType,
             questionText: q.questionText,
