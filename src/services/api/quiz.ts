@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { QuizDto, ApiResponseObject, FullQuizDto } from '../types';
+import { QuizDto, ApiResponseObject, FullQuizDto, FullAttemptQuizDto, QuizAttemptDto } from '../types';
 
 export const createQuiz = async (
   topicId: string,
@@ -18,6 +18,17 @@ export const createFullQuiz = async (
   const instructorId = localStorage.getItem('instructor_id');
   const response = await apiClient.post<ApiResponseObject<QuizDto>>(
     `/quiz/create/${topicId}/${instructorId}`,
+    quizData
+  );
+  return response.data;
+};
+export const attemptFullQuiz = async (
+  quizId: string,
+  quizData: Partial<FullAttemptQuizDto>
+): Promise<ApiResponseObject<QuizAttemptDto>> => {
+  const studentId = localStorage.getItem('student_id');
+  const response = await apiClient.post<ApiResponseObject<QuizAttemptDto>>(
+    `/quiz/attempt/${quizId}/${studentId}`,
     quizData
   );
   return response.data;

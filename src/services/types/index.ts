@@ -254,6 +254,43 @@ export interface StudentProgressDto {
   updatedAt: string;
 }
 
+export interface QuizAttemptDto {
+  id: string;
+  studentId: string;
+  quizId: string;
+  startedAt: string;               // ISO datetime
+  submittedAt: string | null;      // null if not submitted
+  timeSpentSeconds: number | null;
+  totalScore: number | null;
+  maxPossibleScore: number | null;
+  percentageScore: number | null;
+  status: AttemptStatus;
+  adaptiveDifficultyData: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AttemptStatus = "SUBMITTED"
+
+  export interface QuizAnswerDto {
+  id: string;
+  attemptId: string;
+  questionId: string;
+  studentAnswer: string;
+  isCorrect: boolean | null;
+  pointsEarned: number | null;
+  aiFeedback: string | null;
+  timeSpentSeconds: number | null;
+  createdAt: string;   // ISO datetime
+}
+
+export interface FullAttemptQuizDto {
+  quizAttemptDto: Partial<QuizAttemptDto>;
+  questionIds: string[];
+  quizAnswerDtos: Partial<QuizAnswerDto>[];
+}
+
+
 // Enums
 export type UnderstandingLevel = "POOR" | "FAIR" | "GOOD" | "EXCELLENT";
 

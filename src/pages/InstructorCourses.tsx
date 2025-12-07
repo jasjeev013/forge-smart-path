@@ -188,7 +188,7 @@ export default function InstructorCourses() {
                       <div className="flex flex-col md:flex-row gap-4">
                         <img
                           src={course?.thumbnailUrl}
-                          alt={course.title}
+                          alt={course?.title}
                           className="w-full md:w-48 h-32 object-cover rounded-lg"
                         />
                         <div className="flex-1 space-y-3">
