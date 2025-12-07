@@ -33,6 +33,15 @@ export const attemptFullQuiz = async (
   );
   return response.data;
 };
+export const getAttemptFullQuiz = async (
+  quizId: string,
+): Promise<ApiResponseObject<FullAttemptQuizDto>> => {
+  const studentId = localStorage.getItem('student_id');
+  const response = await apiClient.get<ApiResponseObject<FullAttemptQuizDto>>(
+    `/quiz/attempt/get/${quizId}/${studentId}`
+  );
+  return response.data;
+};
 
 export const getQuizById = async (
   quizId: string
