@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,17 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Video, FileText, Link as LinkIcon, HelpCircle, Clock, Play, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Video, FileText, Link as LinkIcon, HelpCircle, Clock, Play, CheckCircle2, Loader2, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
-import { CourseStructure, LearningMaterial, LearningMaterialDto, QuizDto, FullQuizDto, QuizQuestionDto } from '@/services/types';
+import { CourseStructure, LearningMaterial, LearningMaterialDto, QuizDto, FullQuizDto, QuizQuestionDto, FullAttemptQuizDto } from '@/services/types';
 import { getCourseById, markLearningMaterialCompleted } from '@/services/api/course';
 import { getStudentCompletedLearningMaterialForCourse } from '@/services/api/student';
-import { getQuizById } from '@/services/api/quiz';
+import { getQuizById, attemptFullQuiz, getAttemptFullQuiz } from '@/services/api/quiz';
 
 type ContentItem = (LearningMaterialDto | QuizDto) & { type: 'material' | 'quiz' };
 
 export default function CourseLearn() {
-  const { courseId,enrollmentId } = useParams();
+  const { courseId, enrollmentId } = useParams();
   const navigate = useNavigate();
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
@@ -31,6 +31,16 @@ export default function CourseLearn() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  
+  // Time tracking
+  const quizStartTimeRef = useRef<number>(0);
+  const questionStartTimeRef = useRef<number>(0);
+  const [questionTimes, setQuestionTimes] = useState<Record<string, number>>({});
+  
+  // Previous attempt state
+  const [previousAttempt, setPreviousAttempt] = useState<FullAttemptQuizDto | null>(null);
+  const [attemptLoading, setAttemptLoading] = useState(false);
+  const [showAttempt, setShowAttempt] = useState(false);
   
   // const [completedLearningMaterials, setCompletedLearningMaterials] = useState<Set<string>>(new Set());
   
@@ -98,6 +108,7 @@ export default function CourseLearn() {
 
   const handleTakeQuiz = async (quizId: string) => {
     setQuizLoading(true);
+    setShowAttempt(false);
     try {
       const res = await getQuizById(quizId);
       if (res.result && res.object) {
@@ -105,7 +116,10 @@ export default function CourseLearn() {
         setQuizStarted(true);
         setCurrentQuestionIndex(0);
         setSelectedAnswers({});
+        setQuestionTimes({});
         setQuizSubmitted(false);
+        quizStartTimeRef.current = Date.now();
+        questionStartTimeRef.current = Date.now();
       } else {
         toast.error('Failed to load quiz');
       }
@@ -117,9 +131,112 @@ export default function CourseLearn() {
     }
   };
 
-  const handleSubmitQuiz = () => {
-    setQuizSubmitted(true);
-    toast.success('Quiz submitted!');
+  const handleViewAttempt = async (quizId: string) => {
+    setAttemptLoading(true);
+    setShowAttempt(false);
+    try {
+      const res = await getAttemptFullQuiz(quizId);
+      if (res.result && res.object) {
+        setPreviousAttempt(res.object);
+        setShowAttempt(true);
+        setQuizStarted(false);
+      } else {
+        toast.error('No previous attempt found');
+      }
+    } catch (error) {
+      toast.error('Error loading attempt');
+      console.error(error);
+    } finally {
+      setAttemptLoading(false);
+    }
+  };
+
+  const handleQuestionChange = (newIndex: number) => {
+    // Save time spent on current question
+    const currentQuestion = activeQuiz?.quizQuestions?.[currentQuestionIndex];
+    if (currentQuestion?.id) {
+      const timeSpent = Math.floor((Date.now() - questionStartTimeRef.current) / 1000);
+      setQuestionTimes(prev => ({
+        ...prev,
+        [currentQuestion.id!]: (prev[currentQuestion.id!] || 0) + timeSpent
+      }));
+    }
+    questionStartTimeRef.current = Date.now();
+    setCurrentQuestionIndex(newIndex);
+  };
+
+  const handleSubmitQuiz = async () => {
+    if (!activeQuiz || !selectedContent) return;
+    
+    // Save time for the last question
+    const currentQuestion = activeQuiz.quizQuestions?.[currentQuestionIndex];
+    if (currentQuestion?.id) {
+      const timeSpent = Math.floor((Date.now() - questionStartTimeRef.current) / 1000);
+      setQuestionTimes(prev => ({
+        ...prev,
+        [currentQuestion.id!]: (prev[currentQuestion.id!] || 0) + timeSpent
+      }));
+    }
+    
+    const questions = activeQuiz.quizQuestions || [];
+    const totalTimeSpent = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
+    
+    // Calculate scores
+    let totalScore = 0;
+    let maxPossibleScore = 0;
+    
+    const questionIds: string[] = [];
+    const quizAnswerDtos: Array<{
+      studentAnswer: string;
+      isCorrect: boolean;
+      pointsEarned: number;
+      timeSpentSeconds: number;
+    }> = [];
+    
+    questions.forEach((q) => {
+      if (!q.id) return;
+      const studentAnswer = selectedAnswers[q.id] || '';
+      const isCorrect = studentAnswer === q.correctAnswer;
+      const points = q.points || 1;
+      maxPossibleScore += points;
+      const pointsEarned = isCorrect ? points : 0;
+      totalScore += pointsEarned;
+      
+      questionIds.push(q.id);
+      quizAnswerDtos.push({
+        studentAnswer,
+        isCorrect,
+        pointsEarned,
+        timeSpentSeconds: questionTimes[q.id] || 0
+      });
+    });
+    
+    const percentageScore = maxPossibleScore > 0 ? (totalScore / maxPossibleScore) * 100 : 0;
+    
+    const attemptData: Partial<FullAttemptQuizDto> = {
+      quizAttemptDto: {
+        timeSpentSeconds: totalTimeSpent,
+        totalScore,
+        maxPossibleScore,
+        percentageScore,
+        status: "SUBMITTED"
+      },
+      questionIds,
+      quizAnswerDtos
+    };
+    
+    try {
+      const res = await attemptFullQuiz(selectedContent.id, attemptData);
+      if (res.result) {
+        setQuizSubmitted(true);
+        toast.success('Quiz submitted successfully!');
+      } else {
+        toast.error('Failed to submit quiz');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Error submitting quiz');
+    }
   };
 
   const handleResetQuiz = () => {
@@ -127,7 +244,10 @@ export default function CourseLearn() {
     setActiveQuiz(null);
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
+    setQuestionTimes({});
     setQuizSubmitted(false);
+    setShowAttempt(false);
+    setPreviousAttempt(null);
   };
 
   const renderMainContent = () => {
@@ -160,7 +280,67 @@ export default function CourseLearn() {
         );
       }
 
-      // Quiz not started yet - show "Take Quiz" view
+      // Show previous attempt view
+      if (showAttempt && previousAttempt) {
+        const attempt = previousAttempt.quizAttemptDto;
+        const passed = (attempt.percentageScore || 0) >= (quiz.passingScore || 70);
+        
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">Previous Attempt</h2>
+                <p className="text-muted-foreground mt-2">{quiz.title}</p>
+              </div>
+              <Button variant="outline" onClick={handleResetQuiz}>Back</Button>
+            </div>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <div className={`text-6xl font-bold ${passed ? 'text-green-500' : 'text-destructive'}`}>
+                    {(attempt.percentageScore || 0).toFixed(0)}%
+                  </div>
+                  <Badge variant={passed ? 'default' : 'destructive'} className="text-lg px-4 py-1">
+                    {passed ? 'Passed' : 'Failed'}
+                  </Badge>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Score</p>
+                      <p className="font-semibold">{attempt.totalScore} / {attempt.maxPossibleScore}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Time Spent</p>
+                      <p className="font-semibold">{Math.floor((attempt.timeSpentSeconds || 0) / 60)}m {(attempt.timeSpentSeconds || 0) % 60}s</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Answers</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {previousAttempt.quizAnswerDtos.map((answer, index) => (
+                  <div key={index} className={`p-4 rounded-lg border ${answer.isCorrect ? 'border-green-500 bg-green-500/10' : 'border-destructive bg-destructive/10'}`}>
+                    <p className="font-medium mb-2">Question {index + 1}</p>
+                    <p className="text-sm">
+                      Your answer: <span className={answer.isCorrect ? 'text-green-500' : 'text-destructive'}>{answer.studentAnswer}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Points: {answer.pointsEarned} • Time: {answer.timeSpentSeconds}s
+                    </p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        );
+      }
+
+      // Quiz not started yet - show "Start Quiz" and "Quiz Attempt" buttons
       if (!quizStarted || !activeQuiz) {
         return (
           <div className="space-y-6">
@@ -196,9 +376,16 @@ export default function CourseLearn() {
                   </div>
                 </div>
                 <Separator />
-                <Button size="lg" className="w-full" onClick={() => handleTakeQuiz(quiz.id)}>
-                  Take Quiz
-                </Button>
+                <div className="flex gap-4">
+                  <Button size="lg" className="flex-1" onClick={() => handleTakeQuiz(quiz.id)} disabled={quizLoading}>
+                    {quizLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
+                    Start Quiz
+                  </Button>
+                  <Button size="lg" variant="outline" className="flex-1" onClick={() => handleViewAttempt(quiz.id)} disabled={attemptLoading}>
+                    {attemptLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ClipboardList className="w-4 h-4 mr-2" />}
+                    Quiz Attempt
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -327,7 +514,7 @@ export default function CourseLearn() {
           <div className="flex justify-between">
             <Button
               variant="outline"
-              onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+              onClick={() => handleQuestionChange(currentQuestionIndex - 1)}
               disabled={currentQuestionIndex === 0}
             >
               Previous
@@ -338,7 +525,7 @@ export default function CourseLearn() {
               </Button>
             ) : (
               <Button
-                onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                onClick={() => handleQuestionChange(currentQuestionIndex + 1)}
                 disabled={!currentQuestion.id || !selectedAnswers[currentQuestion.id]}
               >
                 Next
