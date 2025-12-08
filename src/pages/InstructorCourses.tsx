@@ -183,7 +183,7 @@ export default function InstructorCourses() {
             ) : (
               <div className="grid gap-4">
                 {publishedCourses.map((course) => (
-                  <Card key={course.id} className="glass hover:border-primary/50 transition-all">
+                  <Card key={course?.id} className="glass hover:border-primary/50 transition-all">
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row gap-4">
                         <img
@@ -195,19 +195,19 @@ export default function InstructorCourses() {
                           <div className="flex items-start justify-between">
                             <div>
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="text-xl font-semibold">{course.title}</h3>
-                                <Badge className={getDifficultyColor(course.difficultyLevel)}>
-                                  {course.difficultyLevel}
+                                <h3 className="text-xl font-semibold">{course?.title}</h3>
+                                <Badge className={getDifficultyColor(course?.difficultyLevel)}>
+                                  {course?.difficultyLevel}
                                 </Badge>
                                 <Badge className="bg-green-500/20 text-green-500">
                                   Published
                                 </Badge>
-                                {course.isFeatured && (
+                                {course?.isFeatured && (
                                   <Badge className="bg-primary/20 text-primary">Featured</Badge>
                                 )}
                               </div>
                               <p className="text-muted-foreground text-sm line-clamp-2">
-                                {course.description}
+                                {course?.description}
                               </p>
                             </div>
                           </div>
@@ -224,10 +224,10 @@ export default function InstructorCourses() {
                               <TrendingUp className="w-4 h-4" />
                               <span>★5 </span>
                             </div>
-                            <span>${course.price}</span>
+                            <span>${course?.price}</span>
                           </div>
                           <div className="flex gap-2">
-                            <Link to={`/instructor/edit-course/${course.id}`}>
+                            <Link to={`/instructor/edit-course/${course?.id}`}>
                               <Button variant="outline" size="sm">
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit
