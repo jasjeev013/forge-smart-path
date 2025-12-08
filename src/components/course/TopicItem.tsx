@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, Video, FileText, Image, HelpCircle, GripVertical, Plus } from 'lucide-react';
+import { Trash2, Video, FileText, Image, HelpCircle, GripVertical, Plus, Sparkles, Loader2 } from 'lucide-react';
 import { TopicDto, LearningMaterialDto, QuizDto, SkillLevel, MaterialType, QuizQuestionDto } from '@/services/types';
+import { generateQuizQuestions } from '@/services/api/quiz';
+import { toast } from 'sonner';
 
 type QuestionType = "MCQ" | "TRUE_FALSE";
 
@@ -43,6 +46,8 @@ export default function TopicItem({
   onDeleteQuizQuestion,
   topicIndex
 }: TopicItemProps) {
+  const [generatingQuizId, setGeneratingQuizId] = useState<string | null>(null);
+
   const getIconForType = (type: MaterialType) => {
     switch (type) {
       case MaterialType.VIDEO: return <Video className="w-4 h-4" />;
@@ -68,6 +73,53 @@ export default function TopicItem({
     const newOptions = { ...question.options };
     delete newOptions[key];
     onUpdateQuizQuestion(quizId, question.id, { options: newOptions });
+  };
+
+  const handleGenerateQuestions = async (quiz: QuizWithQuestions) => {
+    if (!quiz.title || !quiz.description) {
+      toast.error('Please enter quiz title and description first');
+      return;
+    }
+
+    setGeneratingQuizId(quiz.id);
+    try {
+      const response = await generateQuizQuestions({
+        title: quiz.title,
+        description: quiz.description
+      });
+
+      if (response.result && response.object) {
+        const generatedQuestions = response.object.questions;
+        
+        // Convert AI generated questions to QuizQuestionDto format
+        const newQuestions: Partial<QuizQuestionDto>[] = generatedQuestions.map((q, index) => ({
+          id: `temp_${Date.now()}_${index}`,
+          quizId: quiz.id,
+          questionType: q.questionType,
+          questionText: q.questionText,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          points: q.points,
+          orderIndex: q.orderIndex
+        }));
+
+        // Update quiz with generated questions
+        onUpdateQuiz(quiz.id, { 
+          questions: [...(quiz.questions || []), ...newQuestions] as QuizQuestionDto[],
+          totalQuestions: (quiz.questions?.length || 0) + newQuestions.length
+        });
+        
+        toast.success(`Generated ${newQuestions.length} questions successfully!`);
+      } else {
+        toast.error('Failed to generate questions');
+      }
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      toast.error('Failed to generate questions');
+    } finally {
+      setGeneratingQuizId(null);
+    }
   };
 
   return (
@@ -215,17 +267,34 @@ export default function TopicItem({
 
                     {/* Quiz Questions */}
                     <div className="space-y-3 mt-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
                         <span className="text-sm font-medium text-muted-foreground">Questions</span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onAddQuizQuestion(quiz.id)}
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add Question
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleGenerateQuestions(quiz)}
+                            disabled={generatingQuizId === quiz.id}
+                            className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/30 hover:border-purple-500/50"
+                          >
+                            {generatingQuizId === quiz.id ? (
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            ) : (
+                              <Sparkles className="w-3 h-3 mr-1" />
+                            )}
+                            Generate with AI
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onAddQuizQuestion(quiz.id)}
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add Question
+                          </Button>
+                        </div>
                       </div>
 
                       {quiz.questions?.map((question, qIndex) => (
