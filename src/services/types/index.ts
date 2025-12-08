@@ -290,6 +290,26 @@ export interface FullAttemptQuizDto {
   quizAnswerDtos: Partial<QuizAnswerDto>[];
 }
 
+export interface QuizRequestDto{
+  title:string;
+  description:string;
+}
+export interface QuizResponseDto{
+  quizTitle:string;
+  description:string;
+  questions:AIQuizQuestionDto[];
+}
+
+export interface AIQuizQuestionDto {
+  questionText: string;
+  questionType: QuestionType;
+  options: Record<string, string>;
+  correctAnswer: string;
+  explanation: string;
+  points: number;
+  orderIndex: number;
+}
+
 
 // Enums
 export type UnderstandingLevel = "POOR" | "FAIR" | "GOOD" | "EXCELLENT";

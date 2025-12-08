@@ -226,7 +226,7 @@ export default function CourseLearn() {
     };
     
     try {
-      const res = await attemptFullQuiz(selectedContent.id, attemptData);
+      const res = await attemptFullQuiz(selectedContent.id,enrollmentId, courseId, attemptData);
       if (res.result) {
         setQuizSubmitted(true);
         toast.success('Quiz submitted successfully!');
