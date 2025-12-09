@@ -355,7 +355,7 @@ export enum InterviewStatus {
 export interface InterviewAttemptDto {
   id: string;
   studentId: string;
-  templateId: string;
+  interviewId: string;
   startedAt: string | null;      // LocalDateTime
   submittedAt: string | null;    // LocalDateTime
   aiOverallScore: number | null; // 0–100, may be null before scoring
