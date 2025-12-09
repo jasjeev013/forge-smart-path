@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   BookOpen, 
   BarChart3, 
@@ -13,7 +13,8 @@ import {
   CheckCircle,
   Clock,
   Award,
-  ExternalLink
+  ExternalLink,
+  MessageSquare
 } from 'lucide-react';
 import { CourseDto, EnrollmentCourseDto, SkillLevel } from '@/services/types';
 import { useEffect, useState } from 'react';
@@ -40,6 +41,7 @@ const getDifficultyColor = (level: SkillLevel) => {
 };
 
 export default function StudentCourses() {
+  const navigate = useNavigate();
   const [completedCoursesList, setCompletedCoursesList] = useState<EnrollmentCourseDto>({
     studentEnrollments: [],
     courses: [],
@@ -212,12 +214,14 @@ export default function StudentCourses() {
                                 Review Course
                               </Button>
                             </Link>
-                            {/* {course.certificateUrl && (
-                              <Button variant="outline" size="sm">
-                                <ExternalLink className="w-4 h-4 mr-2" />
-                                View Certificate
-                              </Button>
-                            )} */}
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={() => navigate(`/interview/${completedCoursesList.studentEnrollments[index].id}`)}
+                            >
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Take Interview
+                            </Button>
                           </div>
                         </div>
                       </div>
