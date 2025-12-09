@@ -15,7 +15,7 @@ import {
   Award,
   ExternalLink
 } from 'lucide-react';
-import { CourseDto, SkillLevel } from '@/services/types';
+import { CourseDto, EnrollmentCourseDto, SkillLevel } from '@/services/types';
 import { useEffect, useState } from 'react';
 import { getStudentActiveCourses, getStudentCompletedCourses } from '@/services/api/student';
 
@@ -40,8 +40,14 @@ const getDifficultyColor = (level: SkillLevel) => {
 };
 
 export default function StudentCourses() {
-  const [completedCoursesList, setCompletedCoursesList] = useState<CourseDto[]>([]);
-  const [activeCoursesList, setActiveCoursesList] = useState<CourseDto[]>([]);
+  const [completedCoursesList, setCompletedCoursesList] = useState<EnrollmentCourseDto>({
+    studentEnrollments: [],
+    courses: [],
+  });
+  const [activeCoursesList, setActiveCoursesList] = useState<EnrollmentCourseDto>({
+    studentEnrollments: [],
+    courses: [],
+  });
 
   useEffect(() => {
     async function fetchCompletedCourses() {
@@ -82,7 +88,7 @@ export default function StudentCourses() {
 
           {/* Continue Learning Tab */}
           <TabsContent value="continue" className="space-y-4">
-            {activeCoursesList.length === 0 ? (
+            {activeCoursesList.courses.length === 0 ? (
               <Card className="glass">
                 <CardContent className="py-12 text-center">
                   <p className="text-muted-foreground">No courses in progress. Start learning!</p>
@@ -93,7 +99,7 @@ export default function StudentCourses() {
               </Card>
             ) : (
               <div className="grid gap-4">
-                {activeCoursesList.map((course) => (
+                {activeCoursesList.courses.map((course,index) => (
                   <Card key={course.id} className="glass hover:border-primary/50 transition-all">
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row gap-6">
@@ -120,7 +126,7 @@ export default function StudentCourses() {
                             
                               <span className="font-medium">{59}%</span>
                             </div>
-                            <Progress value={10} className="h-2" />
+                            <Progress value={activeCoursesList.studentEnrollments[index].currentProgressPercent} className="h-2" />
                           </div>
 
                           <div className="flex items-center justify-between">
@@ -131,7 +137,7 @@ export default function StudentCourses() {
                                 <span>{course.estimatedDurationHours}</span>
                               </div>
                             </div>
-                            <Link to={`/courses/${course.id}/learn/enroll-1`}>
+                            <Link to={`/courses/${course.id}/learn/${activeCoursesList.studentEnrollments[index].id}`}>
                               <Button>
                                 <Play className="w-4 h-4 mr-2" />
                                 Continue
@@ -149,7 +155,7 @@ export default function StudentCourses() {
 
           {/* Completed Tab */}
           <TabsContent value="completed" className="space-y-4">
-            {completedCoursesList.length === 0 ? (
+            {completedCoursesList.courses.length === 0 ? (
               <Card className="glass">
                 <CardContent className="py-12 text-center">
                   <p className="text-muted-foreground">No completed courses yet. Keep learning!</p>
@@ -157,7 +163,7 @@ export default function StudentCourses() {
               </Card>
             ) : (
               <div className="grid gap-4">
-                {completedCoursesList.map((course) => (
+                {completedCoursesList.courses.map((course,index) => (
                   <Card key={course.id} className="glass hover:border-primary/50 transition-all">
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row gap-6">
@@ -200,7 +206,7 @@ export default function StudentCourses() {
                           </div>
 
                           <div className="flex gap-2">
-                            <Link to={`/courses/${course.id}/learn/enroll-1`}>
+                            <Link to={`/courses/${course.id}/learn/${completedCoursesList.studentEnrollments[index].id}`}>
                               <Button variant="outline" size="sm">
                                 <Play className="w-4 h-4 mr-2" />
                                 Review Course

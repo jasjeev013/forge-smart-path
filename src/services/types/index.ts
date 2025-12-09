@@ -40,11 +40,6 @@ export interface LoginResponse{
   role: string;
 }
 
-export enum SkillLevel {
-  BEGINNER = "BEGINNER",
-  INTERMEDIATE = "INTERMEDIATE",
-  ADVANCED = "ADVANCED"
-}
 
 export enum MaterialType {
   VIDEO = "VIDEO",
@@ -102,6 +97,11 @@ export interface CourseDto {
   price: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface EnrollmentCourseDto {
+  studentEnrollments:StudentEnrollmentDto[];
+  courses:CourseDto[];
 }
 
 export interface TopicDto {
@@ -254,6 +254,38 @@ export interface StudentProgressDto {
   updatedAt: string;
 }
 
+export interface FullInterviewDto {
+  interviewDto: InterviewDto;
+  interviewQuestionDtos: InterviewQuestionDto[];
+}
+
+export interface InterviewDto {
+  id: string;
+  enrollmentId: string;
+  title: string;
+  description: string;
+  totalQuestions: number;
+  isActive: boolean;
+  createdAt: string;   // ISO datetime string
+  updatedAt: string;   // ISO datetime string
+}
+export enum SkillLevel {
+  BEGINNER = "BEGINNER",
+  INTERMEDIATE = "INTERMEDIATE",
+  ADVANCED = "ADVANCED"
+  // add more if needed
+}
+export interface InterviewQuestionDto {
+  id: string;
+  interviewId: string;
+  questionText: string;
+  orderIndex: number;
+  difficultyLevel: SkillLevel;
+  aiGuidancePrompt: string;
+  createdAt: string;   // ISO datetime
+}
+
+
 export interface QuizAttemptDto {
   id: string;
   studentId: string;
@@ -309,6 +341,38 @@ export interface AIQuizQuestionDto {
   points: number;
   orderIndex: number;
 }
+
+export interface FullInterviewAttemptDto {
+  interviewAttemptDto: InterviewAttemptDto;
+  interviewAnswerDto: InterviewAnswerDto[];
+}
+export enum InterviewStatus {
+  IN_PROGRESS = "IN_PROGRESS",
+  SUBMITTED = "SUBMITTED",
+  EVALUATED = "EVALUATED"
+  // add or adjust based on your actual backend enum
+}
+export interface InterviewAttemptDto {
+  id: string;
+  studentId: string;
+  templateId: string;
+  startedAt: string | null;      // LocalDateTime
+  submittedAt: string | null;    // LocalDateTime
+  aiOverallScore: number | null; // 0–100, may be null before scoring
+  aiSkillEvaluation: Record<string, number>; // Map<String, Double>
+  aiFeedbackSummary: string;
+  status: InterviewStatus;
+  createdAt: string;   // LocalDateTime
+  updatedAt: string;   // LocalDateTime
+}
+export interface InterviewAnswerDto {
+  interviewQuestionId: string;
+  studentAnswer: string;
+  aiEvaluation: string;    // AI-generated feedback
+  aiScore: number;         // Score for this question
+  timeSpentSeconds: number;
+}
+
 
 
 // Enums
