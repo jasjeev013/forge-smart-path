@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { ApiResponseObject } from '../types';
+import { ApiResponseObject, CourseDto } from '../types';
 
 export interface StudentDto {
   id: string;
@@ -33,3 +33,18 @@ export const getStudentCompletedLearningMaterialForCourse = async (
   );
   return response.data;
 };
+
+export const getStudentActiveCourses = async (): Promise<ApiResponseObject<CourseDto[]>> => {
+  const studentId = localStorage.getItem('student_id');
+  const response = await apiClient.get<ApiResponseObject<CourseDto[]>>(
+    `/enroll/get/courses/active/${studentId}`,
+  );
+  return response.data;
+};
+export const getStudentCompletedCourses = async (): Promise<ApiResponseObject<CourseDto[]>> => {
+  const studentId = localStorage.getItem('student_id');
+  const response = await apiClient.get<ApiResponseObject<CourseDto[]>>(
+    `/enroll/get/courses/completed/${studentId}`,
+  );
+  return response.data;
+}

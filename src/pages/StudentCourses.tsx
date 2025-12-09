@@ -15,7 +15,9 @@ import {
   Award,
   ExternalLink
 } from 'lucide-react';
-import { SkillLevel } from '@/services/types';
+import { CourseDto, SkillLevel } from '@/services/types';
+import { useEffect, useState } from 'react';
+import { getStudentActiveCourses, getStudentCompletedCourses } from '@/services/api/student';
 
 const navigationItems = [
   { label: 'Dashboard', path: '/student/dashboard', icon: <Home className="w-4 h-4" /> },
@@ -23,89 +25,6 @@ const navigationItems = [
   { label: 'Progress', path: '/student/progress', icon: <BarChart3 className="w-4 h-4" /> },
 ];
 
-interface StudentCourse {
-  id: string;
-  title: string;
-  description: string;
-  thumbnailUrl: string;
-  difficultyLevel: SkillLevel;
-  progress: number;
-  completedLessons: number;
-  totalLessons: number;
-  nextLesson?: string;
-  estimatedTime?: string;
-  completedDate?: string;
-  score?: number;
-  certificateUrl?: string;
-}
-
-const continueLearningCourses: StudentCourse[] = [
-  {
-    id: 'course-1',
-    title: 'Modern JavaScript ES6+',
-    description: 'Master modern JavaScript features and best practices for web development.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400',
-    difficultyLevel: SkillLevel.INTERMEDIATE,
-    progress: 65,
-    completedLessons: 16,
-    totalLessons: 24,
-    nextLesson: 'Async/Await Patterns',
-    estimatedTime: '45 min',
-  },
-  {
-    id: 'course-2',
-    title: 'Introduction to Python',
-    description: 'Learn Python from scratch with hands-on projects and exercises.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400',
-    difficultyLevel: SkillLevel.BEGINNER,
-    progress: 30,
-    completedLessons: 9,
-    totalLessons: 30,
-    nextLesson: 'Working with Lists',
-    estimatedTime: '1h 20min',
-  },
-  {
-    id: 'course-3',
-    title: 'React Fundamentals',
-    description: 'Build modern web applications with React and its ecosystem.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
-    difficultyLevel: SkillLevel.INTERMEDIATE,
-    progress: 85,
-    completedLessons: 17,
-    totalLessons: 20,
-    nextLesson: 'Custom Hooks',
-    estimatedTime: '30 min',
-  },
-];
-
-const completedCourses: StudentCourse[] = [
-  {
-    id: 'course-4',
-    title: 'HTML & CSS Basics',
-    description: 'Foundation course for web development with HTML5 and CSS3.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1621839673705-6617adf9e890?w=400',
-    difficultyLevel: SkillLevel.BEGINNER,
-    progress: 100,
-    completedLessons: 20,
-    totalLessons: 20,
-    completedDate: '2025-10-15',
-    score: 92,
-    certificateUrl: '#',
-  },
-  {
-    id: 'course-5',
-    title: 'Git & GitHub Essentials',
-    description: 'Version control fundamentals for modern software development.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400',
-    difficultyLevel: SkillLevel.BEGINNER,
-    progress: 100,
-    completedLessons: 15,
-    totalLessons: 15,
-    completedDate: '2025-09-28',
-    score: 88,
-    certificateUrl: '#',
-  },
-];
 
 const getDifficultyColor = (level: SkillLevel) => {
   switch (level) {
@@ -121,6 +40,29 @@ const getDifficultyColor = (level: SkillLevel) => {
 };
 
 export default function StudentCourses() {
+  const [completedCoursesList, setCompletedCoursesList] = useState<CourseDto[]>([]);
+  const [activeCoursesList, setActiveCoursesList] = useState<CourseDto[]>([]);
+
+  useEffect(() => {
+    async function fetchCompletedCourses() {
+      // Fetch completed courses logic here
+      const res = await getStudentCompletedCourses();
+      if(res.result){
+        setCompletedCoursesList(res.object);
+      }
+    }
+    async function fetchActiveCourses() {
+      // Fetch active courses logic here
+      const res = await getStudentActiveCourses();
+      if(res.result){
+        setActiveCoursesList(res.object);
+      }
+    }
+    fetchCompletedCourses();
+    fetchActiveCourses();
+  }, []);
+
+
   return (
     <DashboardLayout role="student" navigationItems={navigationItems}>
       <div className="space-y-6">
@@ -140,7 +82,7 @@ export default function StudentCourses() {
 
           {/* Continue Learning Tab */}
           <TabsContent value="continue" className="space-y-4">
-            {continueLearningCourses.length === 0 ? (
+            {activeCoursesList.length === 0 ? (
               <Card className="glass">
                 <CardContent className="py-12 text-center">
                   <p className="text-muted-foreground">No courses in progress. Start learning!</p>
@@ -151,7 +93,7 @@ export default function StudentCourses() {
               </Card>
             ) : (
               <div className="grid gap-4">
-                {continueLearningCourses.map((course) => (
+                {activeCoursesList.map((course) => (
                   <Card key={course.id} className="glass hover:border-primary/50 transition-all">
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row gap-6">
@@ -175,23 +117,18 @@ export default function StudentCourses() {
 
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">
-                                {course.completedLessons} of {course.totalLessons} lessons
-                              </span>
-                              <span className="font-medium">{course.progress}%</span>
+                            
+                              <span className="font-medium">{59}%</span>
                             </div>
-                            <Progress value={course.progress} className="h-2" />
+                            <Progress value={10} className="h-2" />
                           </div>
 
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Play className="w-4 h-4" />
-                                <span>Next: {course.nextLesson}</span>
-                              </div>
+                              
                               <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
-                                <span>{course.estimatedTime}</span>
+                                <span>{course.estimatedDurationHours}</span>
                               </div>
                             </div>
                             <Link to={`/courses/${course.id}/learn/enroll-1`}>
@@ -212,7 +149,7 @@ export default function StudentCourses() {
 
           {/* Completed Tab */}
           <TabsContent value="completed" className="space-y-4">
-            {completedCourses.length === 0 ? (
+            {completedCoursesList.length === 0 ? (
               <Card className="glass">
                 <CardContent className="py-12 text-center">
                   <p className="text-muted-foreground">No completed courses yet. Keep learning!</p>
@@ -220,7 +157,7 @@ export default function StudentCourses() {
               </Card>
             ) : (
               <div className="grid gap-4">
-                {completedCourses.map((course) => (
+                {completedCoursesList.map((course) => (
                   <Card key={course.id} className="glass hover:border-primary/50 transition-all">
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row gap-6">
@@ -253,13 +190,13 @@ export default function StudentCourses() {
                           <div className="flex items-center gap-6 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Award className="w-4 h-4 text-yellow-500" />
-                              <span>Score: {course.score}%</span>
+                              <span>Score: {30}%</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <BookOpen className="w-4 h-4" />
-                              <span>{course.totalLessons} lessons</span>
+                              <span>{30} lessons</span>
                             </div>
-                            <span>Completed: {course.completedDate}</span>
+                            <span>Completed: {course.updatedAt}</span>
                           </div>
 
                           <div className="flex gap-2">
@@ -269,12 +206,12 @@ export default function StudentCourses() {
                                 Review Course
                               </Button>
                             </Link>
-                            {course.certificateUrl && (
+                            {/* {course.certificateUrl && (
                               <Button variant="outline" size="sm">
                                 <ExternalLink className="w-4 h-4 mr-2" />
                                 View Certificate
                               </Button>
-                            )}
+                            )} */}
                           </div>
                         </div>
                       </div>
