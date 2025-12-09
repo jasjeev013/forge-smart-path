@@ -13,9 +13,9 @@ export const getInterviewDetailsAndQuestions = async (
 export const createInterviewAttempt = async (
   enrollmentId: string,
   fullInterviewAttemptDto: Partial<InterviewAttemptDto>
-): Promise<ApiResponseObject<FullInterviewDto>> => {
+): Promise<ApiResponseObject<InterviewAttemptDto>> => {
     const studentId = localStorage.getItem('student_id');
-  const response = await apiClient.post<ApiResponseObject<FullInterviewDto>>(
+  const response = await apiClient.post<ApiResponseObject<InterviewAttemptDto>>(
     `/interview/create/attempt/${studentId}/${enrollmentId}`
     ,fullInterviewAttemptDto
   );
@@ -23,8 +23,8 @@ export const createInterviewAttempt = async (
 };
 export const getInterviewAttempt = async (
   enrollmentId: string,
-): Promise<ApiResponseObject<FullInterviewDto>> => {
-  const response = await apiClient.get<ApiResponseObject<FullInterviewDto>>(
+): Promise<ApiResponseObject<InterviewAttemptDto>> => {
+  const response = await apiClient.get<ApiResponseObject<InterviewAttemptDto>>(
     `/interview/get/attempt/${enrollmentId}`
   );
   return response.data;
